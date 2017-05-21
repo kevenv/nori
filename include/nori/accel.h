@@ -19,6 +19,7 @@
 #pragma once
 
 #include <nori/mesh.h>
+#include <nori/bvh.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -66,6 +67,7 @@ public:
     bool rayIntersect(const Ray3f &ray, Intersection &its, bool shadowRay) const;
 
 private:
+	BVH m_bvh;
     Mesh         *m_mesh = nullptr; ///< Mesh (only a single one for now)
     BoundingBox3f m_bbox;           ///< Bounding box of the entire scene
 };
