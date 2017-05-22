@@ -55,8 +55,8 @@ public:
     /// Return a pointer to the scene's sample generator
     Sampler *getSampler() { return m_sampler; }
 
-    /// Return a reference to an array containing all meshes
-    const std::vector<Mesh *> &getMeshes() const { return m_meshes; }
+    /// Return a reference to an array containing all shapes
+    const std::vector<Shape *> &getShapes() const { return m_shapes; }
 
     /**
      * \brief Intersect a ray against all triangles stored in the scene
@@ -109,7 +109,7 @@ public:
      */
     void activate();
 
-    /// Add a child object to the scene (meshes, integrators etc.)
+    /// Add a child object to the scene (shapes, integrators etc.)
     void addChild(NoriObject *obj);
 
     /// Return a string summary of the scene (for debugging purposes)
@@ -117,7 +117,7 @@ public:
 
     EClassType getClassType() const { return EScene; }
 private:
-    std::vector<Mesh *> m_meshes;
+    std::vector<Shape *> m_shapes;
     Integrator *m_integrator = nullptr;
     Sampler *m_sampler = nullptr;
     Camera *m_camera = nullptr;

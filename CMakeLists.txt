@@ -52,6 +52,7 @@ add_executable(nori
   include/nori/integrator.h
   include/nori/emitter.h
   include/nori/mesh.h
+  include/nori/shape.h
   include/nori/object.h
   include/nori/parser.h
   include/nori/proplist.h
@@ -76,6 +77,7 @@ add_executable(nori
   src/independent.cpp
   src/main.cpp
   src/mesh.cpp
+  src/shape.cpp
   src/obj.cpp
   src/object.cpp
   src/parser.cpp

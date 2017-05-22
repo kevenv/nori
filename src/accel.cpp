@@ -21,11 +21,11 @@
 
 NORI_NAMESPACE_BEGIN
 
-void Accel::addMesh(Mesh *mesh) {
-    if (m_mesh)
-        throw NoriException("Accel: only a single mesh is supported!");
-	m_bvh.addMesh(mesh);
-    m_mesh = m_bvh.getMesh(0);
+void Accel::addShape(Shape *shape) {
+    if (m_shape)
+        throw NoriException("Accel: only a single shape is supported!");
+	m_bvh.addShape(shape);
+    m_shape = m_bvh.getShape(0);
     m_bbox = m_bvh.getBoundingBox();
 }
 

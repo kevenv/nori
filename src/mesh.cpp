@@ -18,27 +18,12 @@
 
 #include <nori/mesh.h>
 #include <nori/bbox.h>
-#include <nori/bsdf.h>
-#include <nori/emitter.h>
 #include <nori/warp.h>
 #include <Eigen/Geometry>
 
 NORI_NAMESPACE_BEGIN
 
 Mesh::Mesh() { }
-
-Mesh::~Mesh() {
-    delete m_bsdf;
-    delete m_emitter;
-}
-
-void Mesh::activate() {
-    if (!m_bsdf) {
-        /* If no material was assigned, instantiate a diffuse BRDF */
-        m_bsdf = static_cast<BSDF *>(
-            NoriObjectFactory::createInstance("diffuse", PropertyList()));
-    }
-}
 
 float Mesh::surfaceArea(uint32_t index) const {
     uint32_t i0 = m_F(0, index), i1 = m_F(1, index), i2 = m_F(2, index);
@@ -87,6 +72,54 @@ bool Mesh::rayIntersect(uint32_t index, const Ray3f &ray, float &u, float &v, fl
     return t >= ray.mint && t <= ray.maxt;
 }
 
+void Mesh::computeIntersectionInfo(uint32_t index, const Ray3f &ray, Intersection & its) const
+{
+	/* Find the barycentric coordinates */
+	Vector3f bary;
+	bary << 1 - its.uv.sum(), its.uv;
+
+	/* References to all relevant mesh buffers */
+	const Mesh *mesh = static_cast<const Mesh*>(its.shape);
+	const MatrixXf &V = mesh->getVertexPositions();
+	const MatrixXf &N = mesh->getVertexNormals();
+	const MatrixXf &UV = mesh->getVertexTexCoords();
+	const MatrixXu &F = mesh->getIndices();
+
+	/* Vertex indices of the triangle */
+	uint32_t idx0 = F(0, index), idx1 = F(1, index), idx2 = F(2, index);
+
+	Point3f p0 = V.col(idx0), p1 = V.col(idx1), p2 = V.col(idx2);
+
+	/* Compute the intersection positon accurately
+	using barycentric coordinates */
+	its.p = bary.x() * p0 + bary.y() * p1 + bary.z() * p2;
+
+	/* Compute proper texture coordinates if provided by the mesh */
+	if (UV.size() > 0)
+		its.uv = bary.x() * UV.col(idx0) +
+		bary.y() * UV.col(idx1) +
+		bary.z() * UV.col(idx2);
+
+	/* Compute the geometry frame */
+	its.geoFrame = Frame((p1 - p0).cross(p2 - p0).normalized());
+
+	if (N.size() > 0) {
+		/* Compute the shading frame. Note that for simplicity,
+		the current implementation doesn't attempt to provide
+		tangents that are continuous across the surface. That
+		means that this code will need to be modified to be able
+		use anisotropic BRDFs, which need tangent continuity */
+
+		its.shFrame = Frame(
+			(bary.x() * N.col(idx0) +
+				bary.y() * N.col(idx1) +
+				bary.z() * N.col(idx2)).normalized());
+	}
+	else {
+		its.shFrame = its.geoFrame;
+	}
+}
+
 BoundingBox3f Mesh::getBoundingBox(uint32_t index) const {
     BoundingBox3f result(m_V.col(m_F(0, index)));
     result.expandBy(m_V.col(m_F(1, index)));
@@ -101,66 +134,18 @@ Point3f Mesh::getCentroid(uint32_t index) const {
          m_V.col(m_F(2, index)));
 }
 
-void Mesh::addChild(NoriObject *obj) {
-    switch (obj->getClassType()) {
-        case EBSDF:
-            if (m_bsdf)
-                throw NoriException(
-                    "Mesh: tried to register multiple BSDF instances!");
-            m_bsdf = static_cast<BSDF *>(obj);
-            break;
-
-        case EEmitter: {
-                Emitter *emitter = static_cast<Emitter *>(obj);
-                if (m_emitter)
-                    throw NoriException(
-                        "Mesh: tried to register multiple Emitter instances!");
-                m_emitter = emitter;
-            }
-            break;
-
-        default:
-            throw NoriException("Mesh::addChild(<%s>) is not supported!",
-                                classTypeName(obj->getClassType()));
-    }
-}
-
 std::string Mesh::toString() const {
     return tfm::format(
+		"%s\n"
         "Mesh[\n"
         "  name = \"%s\",\n"
         "  vertexCount = %i,\n"
         "  triangleCount = %i,\n"
-        "  bsdf = %s,\n"
-        "  emitter = %s\n"
         "]",
+		Shape::toString(),
         m_name,
         m_V.cols(),
-        m_F.cols(),
-        m_bsdf ? indent(m_bsdf->toString()) : std::string("null"),
-        m_emitter ? indent(m_emitter->toString()) : std::string("null")
-    );
-}
-
-std::string Intersection::toString() const {
-    if (!mesh)
-        return "Intersection[invalid]";
-
-    return tfm::format(
-        "Intersection[\n"
-        "  p = %s,\n"
-        "  t = %f,\n"
-        "  uv = %s,\n"
-        "  shFrame = %s,\n"
-        "  geoFrame = %s,\n"
-        "  mesh = %s\n"
-        "]",
-        p.toString(),
-        t,
-        uv.toString(),
-        indent(shFrame.toString()),
-        indent(geoFrame.toString()),
-        mesh ? mesh->toString() : std::string("null")
+        m_F.cols()
     );
 }
 

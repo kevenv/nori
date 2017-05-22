@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <nori/mesh.h>
+#include <nori/shape.h>
 #include <nori/bvh.h>
 
 NORI_NAMESPACE_BEGIN
@@ -32,12 +32,12 @@ NORI_NAMESPACE_BEGIN
 class Accel {
 public:
     /**
-     * \brief Register a triangle mesh for inclusion in the acceleration
+     * \brief Register a shape for inclusion in the acceleration
      * data structure
      *
      * This function can only be used before \ref build() is called
      */
-    void addMesh(Mesh *mesh);
+    void addShape(Shape *shape);
 
     /// Build the acceleration data structure (currently a no-op)
     void build();
@@ -68,7 +68,7 @@ public:
 
 private:
 	BVH m_bvh;
-    Mesh         *m_mesh = nullptr; ///< Mesh (only a single one for now)
+    Shape         *m_shape = nullptr; ///< Shape (only a single one for now)
     BoundingBox3f m_bbox;           ///< Bounding box of the entire scene
 };
 

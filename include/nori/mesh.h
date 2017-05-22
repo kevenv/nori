@@ -18,50 +18,10 @@
 
 #pragma once
 
-#include <nori/object.h>
-#include <nori/frame.h>
+#include <nori/shape.h>
 #include <nori/bbox.h>
 
 NORI_NAMESPACE_BEGIN
-
-/**
- * \brief Intersection data structure
- *
- * This data structure records local information about a ray-triangle intersection.
- * This includes the position, traveled ray distance, uv coordinates, as well
- * as well as two local coordinate frames (one that corresponds to the true
- * geometry, and one that is used for shading computations).
- */
-struct Intersection {
-    /// Position of the surface intersection
-    Point3f p;
-    /// Unoccluded distance along the ray
-    float t;
-    /// UV coordinates, if any
-    Point2f uv;
-    /// Shading frame (based on the shading normal)
-    Frame shFrame;
-    /// Geometric frame (based on the true geometry)
-    Frame geoFrame;
-    /// Pointer to the associated mesh
-    const Mesh *mesh;
-
-    /// Create an uninitialized intersection record
-    Intersection() : mesh(nullptr) { }
-
-    /// Transform a direction vector into the local shading frame
-    Vector3f toLocal(const Vector3f &d) const {
-        return shFrame.toLocal(d);
-    }
-
-    /// Transform a direction vector from local to world coordinates
-    Vector3f toWorld(const Vector3f &d) const {
-        return shFrame.toWorld(d);
-    }
-
-    /// Return a human-readable summary of the intersection record
-    std::string toString() const;
-};
 
 /**
  * \brief Triangle mesh
@@ -71,16 +31,10 @@ struct Intersection {
  * the specifics of how to create its contents (e.g. by loading from an
  * external file)
  */
-class Mesh : public NoriObject {
+class Mesh : public Shape {
 public:
-    /// Release all memory
-    virtual ~Mesh();
-
-    /// Initialize internal data structures (called once by the XML parser)
-    virtual void activate();
-
-    /// Return the total number of triangles in this hsape
-    uint32_t getTriangleCount() const { return (uint32_t) m_F.cols(); }
+    /// Return the total number of primitives in this shape
+    virtual uint32_t getPrimitiveCount() const override { return (uint32_t) m_F.cols(); }
 
     /// Return the total number of vertices in this hsape
     uint32_t getVertexCount() const { return (uint32_t) m_V.cols(); }
@@ -94,14 +48,10 @@ public:
     /// Return the surface area of the given triangle
     float surfaceArea(uint32_t index) const;
 
-    //// Return an axis-aligned bounding box of the entire mesh
-    const BoundingBox3f &getBoundingBox() const { return m_bbox; }
-
-    //// Return an axis-aligned bounding box containing the given triangle
-    BoundingBox3f getBoundingBox(uint32_t index) const;
+	virtual BoundingBox3f getBoundingBox(uint32_t index) const override;
 
     //// Return the centroid of the given triangle
-    Point3f getCentroid(uint32_t index) const;
+	virtual Point3f getCentroid(uint32_t index) const override;
 
     /** \brief Ray-triangle intersection test
      *
@@ -128,7 +78,9 @@ public:
      * \return
      *   \c true if an intersection has been detected
      */
-    bool rayIntersect(uint32_t index, const Ray3f &ray, float &u, float &v, float &t) const;
+	virtual bool rayIntersect(uint32_t index, const Ray3f &ray, float &u, float &v, float &t) const override;
+
+	virtual void computeIntersectionInfo(uint32_t index, const Ray3f &ray, Intersection & its) const override;
 
     /// Return a pointer to the vertex positions
     const MatrixXf &getVertexPositions() const { return m_V; }
@@ -141,47 +93,24 @@ public:
 
     /// Return a pointer to the triangle vertex index list
     const MatrixXu &getIndices() const { return m_F; }
-
-    /// Is this mesh an area emitter?
-    bool isEmitter() const { return m_emitter != nullptr; }
-
-    /// Return a pointer to an attached area emitter instance
-    Emitter *getEmitter() { return m_emitter; }
-
-    /// Return a pointer to an attached area emitter instance (const version)
-    const Emitter *getEmitter() const { return m_emitter; }
-
-    /// Return a pointer to the BSDF associated with this mesh
-    const BSDF *getBSDF() const { return m_bsdf; }
-
-    /// Register a child object (e.g. a BSDF) with the mesh
-    virtual void addChild(NoriObject *child);
-
+	
     /// Return the name of this mesh
     const std::string &getName() const { return m_name; }
 
     /// Return a human-readable summary of this instance
-    std::string toString() const;
-
-    /**
-     * \brief Return the type of object (i.e. Mesh/BSDF/etc.)
-     * provided by this instance
-     * */
-    EClassType getClassType() const { return EMesh; }
+    virtual std::string toString() const override;
 
 protected:
     /// Create an empty mesh
     Mesh();
 
 protected:
-    std::string m_name;                  ///< Identifying name
+	std::string m_name;                   ///< Identifying name
+
     MatrixXf      m_V;                   ///< Vertex positions
     MatrixXf      m_N;                   ///< Vertex normals
     MatrixXf      m_UV;                  ///< Vertex texture coordinates
     MatrixXu      m_F;                   ///< Faces
-    BSDF         *m_bsdf = nullptr;      ///< BSDF of the surface
-    Emitter    *m_emitter = nullptr;     ///< Associated emitter, if any
-    BoundingBox3f m_bbox;                ///< Bounding box of the mesh
 };
 
 NORI_NAMESPACE_END

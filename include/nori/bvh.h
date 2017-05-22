@@ -15,7 +15,7 @@
 #if !defined(__NORI_BVH_H)
 #define __NORI_BVH_H
 
-#include <nori/mesh.h>
+#include <nori/shape.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -40,7 +40,7 @@ class BVH {
     friend class BVHBuildTask;
 public:
     /// Create a new and empty BVH
-    BVH() { m_meshOffset.push_back(0u); }
+    BVH() { m_shapeOffset.push_back(0u); }
 
     /// Release all resources
     virtual ~BVH() { clear(); };
@@ -49,17 +49,17 @@ public:
     void clear();
 
     /**
-     * \brief Register a triangle mesh for inclusion in the BVH.
+     * \brief Register a shape for inclusion in the BVH.
      *
      * This function can only be used before \ref build() is called
      */
-    void addMesh(Mesh *mesh);
+    void addShape(Shape *shape);
 
     /// Build the BVH
     void build();
 
     /**
-     * \brief Intersect a ray against all triangle meshes registered
+     * \brief Intersect a ray against all shapes registered
      * with the BVH
      *
      * Detailed information about the intersection, if any, will be
@@ -76,17 +76,17 @@ public:
     bool rayIntersect(const Ray3f &ray, Intersection &its, 
         bool shadowRay = false) const;
 
-    /// Return the total number of meshes registered with the BVH
-    uint32_t getMeshCount() const { return (uint32_t) m_meshes.size(); }
+    /// Return the total number of shapes registered with the BVH
+    uint32_t getShapeCount() const { return (uint32_t) m_shapes.size(); }
 
     /// Return the total number of internally represented triangles 
-    uint32_t getTriangleCount() const { return m_meshOffset.back(); }
+    uint32_t getTriangleCount() const { return m_shapeOffset.back(); }
 
-    /// Return one of the registered meshes
-    Mesh *getMesh(uint32_t idx) { return m_meshes[idx]; }
+    /// Return one of the registered shapes
+    Shape *getShape(uint32_t idx) { return m_shapes[idx]; }
     
-    /// Return one of the registered meshes (const version)
-    const Mesh *getMesh(uint32_t idx) const { return m_meshes[idx]; }
+    /// Return one of the registered shapes (const version)
+    const Shape *getShape(uint32_t idx) const { return m_shapes[idx]; }
 
     //// Return an axis-aligned bounding box containing the entire tree
     const BoundingBox3f &getBoundingBox() const {
@@ -95,25 +95,25 @@ public:
 
 protected:
     /**
-     * \brief Compute the mesh and triangle indices corresponding to 
+     * \brief Compute the shape indices corresponding to 
      * a primitive index used by the underlying generic BVH implementation. 
      */
-    uint32_t findMesh(uint32_t &idx) const {
-        auto it = std::lower_bound(m_meshOffset.begin(), m_meshOffset.end(), idx+1) - 1;
+    uint32_t findShape(uint32_t &idx) const {
+        auto it = std::lower_bound(m_shapeOffset.begin(), m_shapeOffset.end(), idx+1) - 1;
         idx -= *it;
-        return (uint32_t) (it - m_meshOffset.begin());
+        return (uint32_t) (it - m_shapeOffset.begin());
     }
 
     //// Return an axis-aligned bounding box containing the given triangle
     BoundingBox3f getBoundingBox(uint32_t index) const {
-        uint32_t meshIdx = findMesh(index);
-        return m_meshes[meshIdx]->getBoundingBox(index);
+        uint32_t shapeIdx = findShape(index);
+        return m_shapes[shapeIdx]->getBoundingBox(index);
     }
     
     //// Return the centroid of the given triangle
     Point3f getCentroid(uint32_t index) const {
-        uint32_t meshIdx = findMesh(index);
-        return m_meshes[meshIdx]->getCentroid(index);
+        uint32_t shapeIdx = findShape(index);
+        return m_shapes[shapeIdx]->getCentroid(index);
     }
 
     /// Compute internal tree statistics
@@ -159,8 +159,8 @@ protected:
         }
     };
 private:
-    std::vector<Mesh *> m_meshes;       ///< List of meshes registered with the BVH
-    std::vector<uint32_t> m_meshOffset; ///< Index of the first triangle for each shape
+    std::vector<Shape *> m_shapes;       ///< List of shapes registered with the BVH
+    std::vector<uint32_t> m_shapeOffset; ///< Index of the first triangle for each shape
     std::vector<BVHNode> m_nodes;       ///< BVH nodes
     std::vector<uint32_t> m_indices;    ///< Index references by BVH nodes
     BoundingBox3f m_bbox;               ///< Bounding box of the entire BVH

@@ -301,24 +301,24 @@ public:
     }
 };
 
-void BVH::addMesh(Mesh *mesh) {
-    m_meshes.push_back(mesh);
-    m_meshOffset.push_back(m_meshOffset.back() + mesh->getTriangleCount());
-    m_bbox.expandBy(mesh->getBoundingBox());
+void BVH::addShape(Shape *shape) {
+    m_shapes.push_back(shape);
+    m_shapeOffset.push_back(m_shapeOffset.back() + shape->getPrimitiveCount());
+    m_bbox.expandBy(shape->getBoundingBox());
 }
 
 void BVH::clear() {
-    for (auto mesh : m_meshes)
-        delete mesh;
-    m_meshes.clear();
-    m_meshOffset.clear();
-    m_meshOffset.push_back(0u);
+    for (auto shape : m_shapes)
+        delete shape;
+    m_shapes.clear();
+    m_shapeOffset.clear();
+    m_shapeOffset.push_back(0u);
     m_nodes.clear();
     m_indices.clear();
     m_bbox.reset();
     m_nodes.shrink_to_fit();
-    m_meshes.shrink_to_fit();
-    m_meshOffset.shrink_to_fit();
+    m_shapes.shrink_to_fit();
+    m_shapeOffset.shrink_to_fit();
     m_indices.shrink_to_fit();
 }
 
@@ -326,8 +326,8 @@ void BVH::build() {
     uint32_t size  = getTriangleCount();
     if (size == 0)
         return;
-    cout << "Constructing a SAH BVH (" << m_meshes.size()
-        << (m_meshes.size() == 1 ? " mesh, " : " meshes, ")
+    cout << "Constructing a SAH BVH (" << m_shapes.size()
+        << (m_shapes.size() == 1 ? " shape, " : " shapes, ")
         << size << " triangles) .. ";
     cout.flush();
     Timer timer;
@@ -430,16 +430,16 @@ bool BVH::rayIntersect(const Ray3f &_ray, Intersection &its, bool shadowRay) con
         } else {
             for (uint32_t i = node.start(), end = node.end(); i < end; ++i) {
                 uint32_t idx = m_indices[i];
-                const Mesh *mesh = m_meshes[findMesh(idx)];
+                const Shape *shape = m_shapes[findShape(idx)];
 
                 float u, v, t;
-                if (mesh->rayIntersect(idx, ray, u, v, t)) {
+                if (shape->rayIntersect(idx, ray, u, v, t)) {
                     if (shadowRay)
                         return true;
                     foundIntersection = true;
                     ray.maxt = its.t = t;
                     its.uv = Point2f(u, v);
-                    its.mesh = mesh;
+                    its.shape = shape;
                     f = idx;
                 }
             }
@@ -451,49 +451,7 @@ bool BVH::rayIntersect(const Ray3f &_ray, Intersection &its, bool shadowRay) con
     }
 
     if (foundIntersection) {
-        /* Find the barycentric coordinates */
-        Vector3f bary;
-        bary << 1-its.uv.sum(), its.uv;
-
-        /* References to all relevant mesh buffers */
-        const Mesh *mesh   = its.mesh;
-        const MatrixXf &V  = mesh->getVertexPositions();
-        const MatrixXf &N  = mesh->getVertexNormals();
-        const MatrixXf &UV = mesh->getVertexTexCoords();
-        const MatrixXu &F  = mesh->getIndices();
-
-        /* Vertex indices of the triangle */
-        uint32_t idx0 = F(0, f), idx1 = F(1, f), idx2 = F(2, f);
-
-        Point3f p0 = V.col(idx0), p1 = V.col(idx1), p2 = V.col(idx2);
-
-        /* Compute the intersection positon accurately
-           using barycentric coordinates */
-        its.p = bary.x() * p0 + bary.y() * p1 + bary.z() * p2;
-
-        /* Compute proper texture coordinates if provided by the mesh */
-        if (UV.size() > 0)
-            its.uv = bary.x() * UV.col(idx0) +
-                bary.y() * UV.col(idx1) +
-                bary.z() * UV.col(idx2);
-
-        /* Compute the geometry frame */
-        its.geoFrame = Frame((p1-p0).cross(p2-p0).normalized());
-
-        if (N.size() > 0) {
-            /* Compute the shading frame. Note that for simplicity,
-               the current implementation doesn't attempt to provide
-               tangents that are continuous across the surface. That
-               means that this code will need to be modified to be able
-               use anisotropic BRDFs, which need tangent continuity */
-
-            its.shFrame = Frame(
-                (bary.x() * N.col(idx0) +
-                 bary.y() * N.col(idx1) +
-                 bary.z() * N.col(idx2)).normalized());
-        } else {
-            its.shFrame = its.geoFrame;
-        }
+		its.shape->computeIntersectionInfo(f, ray, its);
     }
 
     return foundIntersection;

@@ -57,7 +57,7 @@ NoriObject *loadFromXML(const std::string &filename) {
     enum ETag {
         /* Object classes */
         EScene                = NoriObject::EScene,
-        EMesh                 = NoriObject::EMesh,
+		EShape                = NoriObject::EShape,
         EBSDF                 = NoriObject::EBSDF,
         EPhaseFunction        = NoriObject::EPhaseFunction,
         EEmitter            = NoriObject::EEmitter,
@@ -89,7 +89,8 @@ NoriObject *loadFromXML(const std::string &filename) {
     /* Create a mapping from tag names to tag IDs */
     std::map<std::string, ETag> tags;
     tags["scene"]      = EScene;
-    tags["mesh"]       = EMesh;
+    tags["mesh"]       = EShape; // allows Mesh to be instantiated using the old file format
+	tags["shape"]      = EShape;
     tags["bsdf"]       = EBSDF;
     tags["emitter"]  = EEmitter;
     tags["camera"]     = ECamera;
