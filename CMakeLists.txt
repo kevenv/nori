@@ -78,6 +78,7 @@ add_executable(nori
   src/main.cpp
   src/mesh.cpp
   src/shape.cpp
+  src/sphere.cpp
   src/obj.cpp
   src/object.cpp
   src/parser.cpp

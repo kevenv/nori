@@ -43,7 +43,7 @@ public:
     void build();
 
     /// Return an axis-aligned box that bounds the scene
-    const BoundingBox3f &getBoundingBox() const { return m_bbox; }
+    const BoundingBox3f &getBoundingBox() const { return m_bvh.getBoundingBox(); }
 
     /**
      * \brief Intersect a ray against all triangles stored in the scene and
@@ -68,8 +68,6 @@ public:
 
 private:
 	BVH m_bvh;
-    Shape         *m_shape = nullptr; ///< Shape (only a single one for now)
-    BoundingBox3f m_bbox;           ///< Bounding box of the entire scene
 };
 
 NORI_NAMESPACE_END

@@ -265,4 +265,6 @@ extern float fresnel(float cosThetaI, float extIOR, float intIOR);
  */
 extern filesystem::resolver *getFileResolver();
 
+bool solveQuadratic(float a, float b, float c, float& x0, float& x1);
+
 NORI_NAMESPACE_END
