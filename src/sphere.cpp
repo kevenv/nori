@@ -38,9 +38,9 @@ public:
 		// transform Ray (world space) to object space
 
 		// compute quadratic sphere coefficients
-		float a = ray.d.x() * ray.d.x() + ray.d.y() * ray.d.y() + ray.d.z() * ray.d.z();
-		float b = 2 * (ray.d.x() * ray.o.x() + ray.d.y() * ray.o.y() + ray.d.z() * ray.o.z());
-		float c = ray.o.x() * ray.o.x() + ray.o.y() * ray.o.y() + ray.o.z() * ray.o.z() - m_radius * m_radius;
+		float a = ray.d.dot(ray.d);
+		float b = 2 * ray.d.dot(ray.o - nori::Point3f(0.0f,0.0f,1.0f));
+		float c = ray.o.dot(ray.o - nori::Point3f(0.0f, 0.0f, 1.0f)) - m_radius * m_radius;
 
 		// t = solve quadratic equation
 		float t0, t1;
@@ -101,7 +101,7 @@ public:
 		rayIntersect(index, ray, u, v, t);
 		its.p = ray(t);
 
-		Vector3f l = its.p - nori::Point3f(0.0f,0.0f,0.0f);
+		Vector3f l = its.p - nori::Point3f(0.0f,0.0f,1.0f);
 		Vector3f n = l.normalized();
 		its.geoFrame = Frame(n);
 		its.shFrame = Frame(n);
@@ -111,7 +111,7 @@ public:
 		return tfm::format(
 			"%s\n"
 			"Sphere[\n"
-			"radius = %f",
+			"radius = %d"
 			"]",
 			Shape::toString(),
 			m_radius

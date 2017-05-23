@@ -5,7 +5,7 @@
 	</sampler>
 
     <!-- Render the visible surface normals -->
-    <integrator type="normals"/>
+    <integrator type="simple"/>
 
     <!-- Load a Sphhere -->
 	<shape type="sphere">
