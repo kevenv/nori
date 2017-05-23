@@ -21,3 +21,4 @@ rules.ninja
 Debug
 x64
 *.exr
+ajax.obj

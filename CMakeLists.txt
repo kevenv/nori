@@ -92,6 +92,8 @@ add_executable(nori
   src/mirror.cpp
   src/dielectric.cpp
   src/normals.cpp
+  src/simple.cpp
+  src/point_light.cpp
 )
 
 add_definitions(${NANOGUI_EXTRA_DEFS})
