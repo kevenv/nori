@@ -39,8 +39,8 @@ public:
 
 		// compute quadratic sphere coefficients
 		float a = ray.d.dot(ray.d);
-		float b = 2 * ray.d.dot(ray.o - nori::Point3f(0.0f,0.0f,1.0f));
-		float c = ray.o.dot(ray.o - nori::Point3f(0.0f, 0.0f, 1.0f)) - m_radius * m_radius;
+		float b = 2.0f * ray.d.dot(ray.o - nori::Point3f(0.0f,0.0f,1.0f));
+		float c = (ray.o - nori::Point3f(0.0f, 0.0f, 1.0f)).dot(ray.o - nori::Point3f(0.0f, 0.0f, 1.0f)) - m_radius * m_radius;
 
 		// t = solve quadratic equation
 		float t0, t1;
@@ -49,7 +49,7 @@ public:
 		}
 		// check quadratic t0,t1 for nearest intersection
 		const float epsillon = 1e-8f;
-		if (t0 + epsillon > ray.maxt || t1 - epsillon <= 0.0f) {
+		if (t0 + epsillon > ray.maxt || t1 - epsillon <= ray.mint) {
 			return false;
 		}
 		t = t0;
