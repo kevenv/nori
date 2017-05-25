@@ -16,10 +16,7 @@
 		<bsdf type="diffuse">
 			<color name="albedo" value="1,1,1"/>
 		</bsdf>
-		<transform name="toWorld">
-			<scale value="1,1,1"/>
-			<translate value="0,0,1"/>
-		</transform>
+		<point name="center" value="0,0,1"/>
 		<float name="radius" value="1.5"/>
 	</shape>
 	
