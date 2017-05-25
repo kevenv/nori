@@ -55,19 +55,44 @@ float Warp::squareToUniformSpherePdf(const Vector3f &v) {
 }
 
 Vector3f Warp::squareToUniformHemisphere(const Point2f &sample) {
-    throw NoriException("Warp::squareToUniformHemisphere() is not yet implemented!");
+	float z = sample.x();
+	float r = std::sqrt(std::max(0.0f, 1.0f - z * z));
+	float phi = 2 * M_PI * sample.y();
+	return Vector3f(r * std::cos(phi), r * std::sin(phi), z);
 }
 
 float Warp::squareToUniformHemispherePdf(const Vector3f &v) {
-    throw NoriException("Warp::squareToUniformHemispherePdf() is not yet implemented!");
+	return v.z() > 0.0f ? INV_TWOPI : 0.0f;
 }
 
 Vector3f Warp::squareToCosineHemisphere(const Point2f &sample) {
-    throw NoriException("Warp::squareToCosineHemisphere() is not yet implemented!");
+	Point2f d = concentricSampleDisk(sample);
+	float z = std::sqrt(std::max(0.0f, 1 - d.x()*d.x() - d.y()*d.y()));
+	return Vector3f(d.x(), d.y(), z);
 }
 
 float Warp::squareToCosineHemispherePdf(const Vector3f &v) {
-    throw NoriException("Warp::squareToCosineHemispherePdf() is not yet implemented!");
+	return v.z() > 0.0f ? v.z() * INV_PI : 0.0f;
+}
+
+Point2f Warp::concentricSampleDisk(const Point2f &sample) {
+	// map uniform random numbers to [-1,1]^2
+	Point2f uOffset = 2.0f * sample - Vector2f(1, 1);
+	// handle degeneracy at the origin
+	if (uOffset.x() == 0.0f && uOffset.y() == 0.0f) {
+		return Point2f(0.0f, 0.0f);
+	}
+	// apply concentric mapping to point
+	float theta, r;
+	if (std::abs(uOffset.x()) > std::abs(uOffset.y())) {
+		r = uOffset.x();
+		theta = PI_OVER_FOUR * (uOffset.y() / uOffset.x());
+	}
+	else {
+		r = uOffset.y();
+		theta = PI_OVER_TWO - PI_OVER_FOUR * (uOffset.x() / uOffset.y());
+	}
+	return r * Point2f(std::cos(theta), std::sin(theta));
 }
 
 Vector3f Warp::squareToBeckmann(const Point2f &sample, float alpha) {
