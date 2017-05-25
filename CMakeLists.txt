@@ -94,7 +94,9 @@ add_executable(nori
   src/normals.cpp
   src/simple.cpp
   src/ao.cpp
+  src/direct.cpp
   src/point_light.cpp
+  src/area_light.cpp
 )
 
 add_definitions(${NANOGUI_EXTRA_DEFS})

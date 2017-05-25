@@ -28,6 +28,8 @@ NORI_NAMESPACE_BEGIN
 class Emitter : public NoriObject {
 public:
 
+	virtual Color3f eval() const = 0;
+
     /**
      * \brief Return the type of object (i.e. Mesh/Emitter/etc.) 
      * provided by this instance

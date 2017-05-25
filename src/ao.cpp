@@ -36,7 +36,7 @@ public:
 				float cosTheta = std::max(0.0f, d.dot(n));
 				Lr += V * cosTheta;
 			}
-			Lr *= 2 * m_albedo / m_sampleCount;
+			Lr *= 2.0f * m_albedo / m_sampleCount;
 
 		}
 		else {

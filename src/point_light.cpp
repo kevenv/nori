@@ -9,6 +9,10 @@ public:
 		
 	}
 
+	Color3f eval() const override {
+		return Color3f(0.0f);
+	}
+
 	/// Return a human-readable summary
 	std::string toString() const {
 		return tfm::format(
