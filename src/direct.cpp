@@ -44,7 +44,7 @@ public:
 				Lr += brdfValue * Le * cosTheta;
 			}
 		}
-		Lr *= 2.0f / m_sampleCount;
+		Lr *= 2.0f * M_PI / m_sampleCount;
 
 		return Lr;
 	}
