@@ -36,6 +36,7 @@ void Shape::addChild(NoriObject *obj) {
 			throw NoriException(
 				"Shape: tried to register multiple Emitter instances!");
 		m_emitter = emitter;
+		m_emitter->setShape(this);
 	}
 		break;
 

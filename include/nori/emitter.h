@@ -22,6 +22,8 @@
 
 NORI_NAMESPACE_BEGIN
 
+class Shape;
+
 /**
  * \brief Superclass of all emitters
  */
@@ -30,11 +32,17 @@ public:
 
 	virtual Color3f eval() const = 0;
 
+	const Shape* getShape() const { return m_Shape; }
+	void setShape(Shape* shape) { m_Shape = shape; }
+
     /**
      * \brief Return the type of object (i.e. Mesh/Emitter/etc.) 
      * provided by this instance
      * */
     EClassType getClassType() const { return EEmitter; }
+
+private:
+	Shape* m_Shape = nullptr;
 };
 
 NORI_NAMESPACE_END
