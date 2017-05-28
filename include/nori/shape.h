@@ -66,6 +66,8 @@ public:
 	/// Return the total number of primitives in this shape
 	virtual uint32_t getPrimitiveCount() const = 0;
 
+	virtual float getArea() const = 0;
+
 	/** \brief Ray-triangle intersection test
 	*
 	* Uses the algorithm by Moeller and Trumbore discussed at

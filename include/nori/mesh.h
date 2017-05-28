@@ -53,6 +53,8 @@ public:
     //// Return the centroid of the given triangle
 	virtual Point3f getCentroid(uint32_t index) const override;
 
+	virtual float getArea() const override;
+
     /** \brief Ray-triangle intersection test
      *
      * Uses the algorithm by Moeller and Trumbore discussed at

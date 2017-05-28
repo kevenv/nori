@@ -34,6 +34,10 @@ public:
 		return m_center;
 	}
 
+	virtual float getArea() const override {
+		return 4 * M_PI * m_radius * m_radius;
+	}
+
 	virtual bool rayIntersect(uint32_t index, const Ray3f &ray, float &u, float &v, float &t) const override {
 		// transform Ray (world space) to object space
 

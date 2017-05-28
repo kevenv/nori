@@ -134,6 +134,10 @@ Point3f Mesh::getCentroid(uint32_t index) const {
          m_V.col(m_F(2, index)));
 }
 
+float Mesh::getArea() const {
+	return 0.0f;
+}
+
 std::string Mesh::toString() const {
     return tfm::format(
 		"%s\n"
