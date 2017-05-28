@@ -40,7 +40,7 @@
 		</bsdf>
 		<emitter type="area">
 			<!-- Assign a uniform radiance of 1 W/m2sr -->
-            <color name="radiance" value="100, 100, 100"/>
+            <color name="radiance" value="50, 50, 50"/>
 		</emitter>
 	</shape>
 
