@@ -58,6 +58,8 @@ public:
     /// Return a reference to an array containing all shapes
     const std::vector<Shape *> &getShapes() const { return m_shapes; }
 
+	const std::vector<Emitter *> getEmitters() const { return m_emitters; }
+
     /**
      * \brief Intersect a ray against all triangles stored in the scene
      * and return detailed intersection information
@@ -118,6 +120,7 @@ public:
     EClassType getClassType() const { return EScene; }
 private:
     std::vector<Shape *> m_shapes;
+	std::vector<Emitter* > m_emitters;
     Integrator *m_integrator = nullptr;
     Sampler *m_sampler = nullptr;
     Camera *m_camera = nullptr;
