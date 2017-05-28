@@ -22,6 +22,10 @@ public:
 		if (!scene->rayIntersect(ray, its))
 			return Color3f(0.0f);
 
+		if (its.shape->isEmitter()) {
+			return Color3f(1.0f);
+		}
+
 		Normal3f n = its.shFrame.n;
 		float maxt = scene->getBoundingBox().getExtents().norm();
 
