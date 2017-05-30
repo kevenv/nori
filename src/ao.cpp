@@ -31,6 +31,7 @@ public:
 			for (int i = 0; i < m_sampleCount; ++i) {
 				Vector3f d = Warp::squareToUniformHemisphere(sampler->next2D());
 				d = its.toWorld(d); // transform to world space so it aligns with the its
+				d.normalize();
 				Ray3f shadowRay(its.p, d, Epsilon, maxt);
 				float V = (float)!scene->rayIntersect(shadowRay);
 				float cosTheta = std::max(0.0f, d.dot(n));
@@ -44,6 +45,7 @@ public:
 			for (int i = 0; i < m_sampleCount; ++i) {
 				Vector3f d = Warp::squareToCosineHemisphere(sampler->next2D());
 				d = its.toWorld(d); // transform to world space so it aligns with the its
+				d.normalize();
 				Ray3f shadowRay(its.p, d, Epsilon, maxt);
 				float V = (float)!scene->rayIntersect(shadowRay);
 				Lr += V;
