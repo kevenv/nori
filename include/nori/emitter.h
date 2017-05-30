@@ -32,8 +32,8 @@ public:
 
 	virtual Color3f eval() const = 0;
 
-	const Shape* getShape() const { return m_Shape; }
-	void setShape(Shape* shape) { m_Shape = shape; }
+	const Shape* getShape() const { return m_shape; }
+	void setShape(Shape* shape) { m_shape = shape; }
 
     /**
      * \brief Return the type of object (i.e. Mesh/Emitter/etc.) 
@@ -41,8 +41,8 @@ public:
      * */
     EClassType getClassType() const { return EEmitter; }
 
-private:
-	Shape* m_Shape = nullptr;
+protected:
+	Shape* m_shape = nullptr;
 };
 
 NORI_NAMESPACE_END
