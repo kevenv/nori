@@ -55,6 +55,8 @@ public:
 
 	virtual float getArea() const override;
 
+	virtual Point3f sample(Sampler* sampler, Normal3f& normal) const override;
+
     /** \brief Ray-triangle intersection test
      *
      * Uses the algorithm by Moeller and Trumbore discussed at

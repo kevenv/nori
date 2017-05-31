@@ -23,6 +23,7 @@
 NORI_NAMESPACE_BEGIN
 
 class Shape;
+class Sampler;
 
 /**
  * \brief Superclass of all emitters
@@ -31,6 +32,8 @@ class Emitter : public NoriObject {
 public:
 
 	virtual Color3f eval() const = 0;
+
+	virtual Point3f sample(Sampler* sampler, Normal3f& normal) const = 0;
 
 	const Shape* getShape() const { return m_shape; }
 	void setShape(Shape* shape) { m_shape = shape; }

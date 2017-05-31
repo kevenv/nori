@@ -59,10 +59,9 @@ public:
 				if (lightShape) { // is area light?
 					Color3f Le = emitter->eval();
 
+					Normal3f yN;
 					Point3f x = its.p;
-					Vector3f v = Warp::squareToUniformSphere(sampler->next2D());
-					Point3f y = v * 0.1f + Vector3f(1, -1.5, 1.75);
-					Normal3f yN = Normal3f(y);
+					Point3f y = emitter->sample(sampler, yN);
 					Vector3f d = (y-x).normalized();
 					
 					Ray3f lightRay(x, d, Epsilon, maxt);

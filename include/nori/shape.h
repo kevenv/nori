@@ -8,6 +8,7 @@
 NORI_NAMESPACE_BEGIN
 
 class Shape;
+class Sampler;
 
 /**
 * \brief Intersection data structure
@@ -67,6 +68,8 @@ public:
 	virtual uint32_t getPrimitiveCount() const = 0;
 
 	virtual float getArea() const = 0;
+
+	virtual Point3f sample(Sampler* sampler, Normal3f& normal) const = 0;
 
 	/** \brief Ray-triangle intersection test
 	*

@@ -9,8 +9,12 @@ public:
 		
 	}
 
-	Color3f eval() const override {
-		return Color3f(0.0f);
+	virtual Color3f eval() const override {
+		throw NoriException("Unimplemented PointLight::eval() !!!");
+	}
+
+	virtual Point3f sample(Sampler* sampler, Normal3f& normal) const override {
+		throw NoriException("Unimplemented PointLight::sample() !!!");
 	}
 
 	/// Return a human-readable summary

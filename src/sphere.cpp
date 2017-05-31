@@ -1,6 +1,7 @@
 
 #include <nori/shape.h>
 #include <nori/common.h>
+#include <nori/warp.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -36,6 +37,13 @@ public:
 
 	virtual float getArea() const override {
 		return 4 * M_PI * m_radius * m_radius;
+	}
+
+	virtual Point3f sample(Sampler* sampler, Normal3f& normal) const override {
+		Vector3f v = Warp::squareToUniformSphere(sampler->next2D());
+		Point3f y = v * m_radius + m_center;
+		normal = Normal3f(y);
+		return y;
 	}
 
 	virtual bool rayIntersect(uint32_t index, const Ray3f &ray, float &u, float &v, float &t) const override {

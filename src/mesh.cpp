@@ -135,7 +135,11 @@ Point3f Mesh::getCentroid(uint32_t index) const {
 }
 
 float Mesh::getArea() const {
-	return 0.0f;
+	throw NoriException("Unimplemented Mesh::getArea() !!!");
+}
+
+Point3f Mesh::sample(Sampler* sampler, Normal3f& normal) const {
+	throw NoriException("Unimplemented Mesh::sample() !!!");
 }
 
 std::string Mesh::toString() const {

@@ -1,5 +1,6 @@
 
 #include <nori/emitter.h>
+#include <nori/shape.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -11,8 +12,12 @@ public:
 
 	}
 
-	Color3f eval() const override {
-		return m_radiance;
+	virtual Color3f eval() const override {
+		return m_radiance * M_PI * m_shape->getArea();
+	}
+
+	virtual Point3f sample(Sampler* sampler, Normal3f& normal) const override {
+		return m_shape->sample(sampler, normal);
 	}
 
 	/// Return a human-readable summary
