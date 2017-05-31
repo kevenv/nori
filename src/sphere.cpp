@@ -42,7 +42,7 @@ public:
 	virtual Point3f sample(Sampler* sampler, Normal3f& normal) const override {
 		Vector3f v = Warp::squareToUniformSphere(sampler->next2D());
 		Point3f y = v * m_radius + m_center;
-		normal = Normal3f(y);
+		normal = Normal3f(v);
 		return y;
 	}
 
