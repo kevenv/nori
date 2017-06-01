@@ -91,7 +91,52 @@ public:
 
 		}
 		else {
-			throw NoriException("DirectIntegrator: Unimplemented sampling method %s", m_samplingMethod);
+			
+			for (int i = 0; i < m_sampleCount; ++i) {
+				for (const Emitter* emitter : scene->getEmitters()) {
+					const Shape* lightShape = emitter->getShape();
+					if (lightShape) { // is area light?
+
+						Point3f x = its.p;
+							float r = 0.1f;
+							Point3f c(1, -1.5, 1.75);
+						float sinThetaMax2 = r*r / (c - x).squaredNorm();
+						float cosThetaMax = std::sqrt(std::max(0.0f, 1.0f - sinThetaMax2));
+						float sinTheta, cosTheta, phi;
+						Vector3f d = Warp::squareToUniformCone(sampler->next2D(), cosThetaMax, sinTheta, cosTheta, phi);
+						d = Frame((c - x).normalized()).toWorld(d); // align w xc
+						
+						// its pt
+						float dc = (c - x).norm();
+						float ds = dc * cosTheta - std::sqrt(std::max(0.0f, r*r - dc*dc * sinTheta*sinTheta));
+						float cosAlpha = (dc*dc + r*r - ds*ds) / (2*dc*r);
+						float sinAlpha = std::sqrt(std::max(0.0f, 1 - cosAlpha*cosAlpha));
+
+						//spherical direction
+						Vector3f y(sinAlpha * std::cos(phi), sinAlpha * std::sin(phi), cosTheta);
+						Normal3f yN(y);
+						y = y*r + c;
+
+						Ray3f lightRay(x, d, Epsilon, maxt);
+						Intersection itsLight;
+						bool intersects = scene->rayIntersect(lightRay, itsLight);
+						if (intersects && itsLight.shape->isEmitter()) {
+							const Emitter* em = itsLight.shape->getEmitter();
+							Color3f Le = em->eval();
+							float cosTheta = std::max(0.0f, d.dot(n));
+							nori::BSDFQueryRecord bRec(d, its.toLocal(-ray.d), nori::ESolidAngle);
+							nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
+							float cosWi = d.dot(yN);
+							float pWi = (x-y).squaredNorm() / ( std::abs(-cosWi) * itsLight.shape->getArea() );
+
+							Lr += brdfValue * Le * cosTheta / pWi;
+						}
+
+					}
+				}
+			}
+			Lr *= 1.0f / m_sampleCount;
+
 		}
 
 		return Lr;

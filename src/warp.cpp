@@ -78,6 +78,17 @@ float Warp::squareToCosineHemispherePdf(const Vector3f &v) {
 	return v.z() > 0.0f ? v.z() * INV_PI : 0.0f;
 }
 
+Vector3f Warp::squareToUniformCone(const Point2f &sample, float cosThetaMax, float &sinTheta, float &cosTheta, float &phi) {
+	cosTheta = (1.0f - sample.x()) + sample.x() * cosThetaMax;
+	sinTheta = std::sqrt(std::max(0.0f, 1.0f - cosTheta * cosTheta));
+	phi = sample.y() * 2 * M_PI;
+	return Vector3f(std::cos(phi) * sinTheta, std::sin(phi) * sinTheta, cosTheta);
+}
+
+float Warp::squareToUniformConePdf(float cosThetaMax) {
+	return 1.0f / ( 2*M_PI * (1.0f - cosThetaMax) );
+}
+
 Point2f Warp::concentricSampleDisk(const Point2f &sample) {
 	// map uniform random numbers to [-1,1]^2
 	Point2f uOffset = 2.0f * sample - Vector2f(1, 1);

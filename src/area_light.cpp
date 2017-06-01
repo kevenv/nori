@@ -13,7 +13,7 @@ public:
 	}
 
 	virtual Color3f eval() const override {
-		return m_radiance * M_PI * m_shape->getArea();
+		return m_radiance;
 	}
 
 	virtual Point3f sample(Sampler* sampler, Normal3f& normal) const override {
