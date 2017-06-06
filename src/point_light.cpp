@@ -17,6 +17,10 @@ public:
 		throw NoriException("Unimplemented PointLight::sample() !!!");
 	}
 
+	virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi) const override {
+		throw NoriException("Unimplemented PointLight::sampleSolidAngle() !!!");
+	}
+
 	/// Return a human-readable summary
 	std::string toString() const {
 		return tfm::format(

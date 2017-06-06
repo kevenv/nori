@@ -96,27 +96,11 @@ public:
 				for (const Emitter* emitter : scene->getEmitters()) {
 					const Shape* lightShape = emitter->getShape();
 					if (lightShape) { // is area light?
-
-						Point3f x = its.p;
-							float r = 0.1f;
-							Point3f c(1, -1.5, 1.75);
-						float sinThetaMax2 = r*r / (c - x).squaredNorm();
-						float cosThetaMax = std::sqrt(std::max(0.0f, 1.0f - sinThetaMax2));
-						float sinTheta, cosTheta, phi;
-						Vector3f d = Warp::squareToUniformCone(sampler->next2D(), cosThetaMax, sinTheta, cosTheta, phi);
-						d = Frame((c - x).normalized()).toWorld(d); // align w xc
+						Normal3f yN;
+						float pWi;
+						Vector3f d = emitter->sampleSolidAngle(sampler, its.p, yN, pWi);
 						
-						// its pt
-						float dc = (c - x).norm();
-						float ds = dc * cosTheta - std::sqrt(std::max(0.0f, r*r - dc*dc * sinTheta*sinTheta));
-						float cosAlpha = (dc*dc + r*r - ds*ds) / (2*dc*r);
-						float sinAlpha = std::sqrt(std::max(0.0f, 1 - cosAlpha*cosAlpha));
-
-						//spherical direction
-						Vector3f y(sinAlpha * std::cos(phi), sinAlpha * std::sin(phi), cosTheta);
-						y = y*r + c;
-
-						Ray3f lightRay(x, d, Epsilon, maxt);
+						Ray3f lightRay(its.p, d, Epsilon, maxt);
 						Intersection itsLight;
 						bool intersects = scene->rayIntersect(lightRay, itsLight);
 						if (intersects && itsLight.shape->isEmitter()) {
@@ -124,11 +108,9 @@ public:
 							float cosTheta = std::max(0.0f, d.dot(n));
 							nori::BSDFQueryRecord bRec(d, its.toLocal(-ray.d), nori::ESolidAngle);
 							nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
-							float pWi = Warp::squareToUniformConePdf(cosThetaMax);
 
 							Lr += brdfValue * Le * cosTheta / pWi;
 						}
-
 					}
 				}
 			}

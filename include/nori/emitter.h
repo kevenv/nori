@@ -34,6 +34,7 @@ public:
 	virtual Color3f eval() const = 0;
 
 	virtual Point3f sample(Sampler* sampler, Normal3f& normal) const = 0;
+	virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi) const = 0;
 
 	const Shape* getShape() const { return m_shape; }
 	void setShape(Shape* shape) { m_shape = shape; }

@@ -20,6 +20,10 @@ public:
 		return m_shape->sample(sampler, normal);
 	}
 
+	virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi) const override {
+		return m_shape->sampleSolidAngle(sampler, x, normal, pWi);
+	}
+
 	/// Return a human-readable summary
 	std::string toString() const {
 		return tfm::format(

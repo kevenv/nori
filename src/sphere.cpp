@@ -46,6 +46,34 @@ public:
 		return y;
 	}
 
+	virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi) const override {
+		float r = m_radius;
+		Point3f c(m_center);
+		Vector3f cx(c - x);
+
+		// subtended solid angle
+		float sinThetaMax2 = r*r / cx.squaredNorm();
+		float cosThetaMax = std::sqrt(std::max(0.0f, 1.0f - sinThetaMax2));
+		float sinTheta, cosTheta, phi;
+		Vector3f d = Warp::squareToUniformCone(sampler->next2D(), cosThetaMax, sinTheta, cosTheta, phi);
+		d = Frame(cx.normalized()).toWorld(d); // align w cx
+
+		// intersection point
+		float dc = cx.norm();
+		float ds = dc * cosTheta - std::sqrt(std::max(0.0f, r*r - dc*dc * sinTheta*sinTheta));
+		float cosAlpha = (dc*dc + r*r - ds*ds) / (2.0f * dc*r);
+		float sinAlpha = std::sqrt(std::max(0.0f, 1.0f - cosAlpha*cosAlpha));
+
+		// spherical direction
+		Vector3f y(sinAlpha * std::cos(phi), sinAlpha * std::sin(phi), cosTheta);
+		normal = y;
+		y = y*r + c; //to world
+
+		pWi = Warp::squareToUniformConePdf(cosThetaMax);
+
+		return d;
+	}
+
 	virtual bool rayIntersect(uint32_t index, const Ray3f &ray, float &u, float &v, float &t) const override {
 		// transform Ray (world space) to object space
 
