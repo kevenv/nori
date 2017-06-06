@@ -114,20 +114,17 @@ public:
 
 						//spherical direction
 						Vector3f y(sinAlpha * std::cos(phi), sinAlpha * std::sin(phi), cosTheta);
-						Normal3f yN(y);
 						y = y*r + c;
 
 						Ray3f lightRay(x, d, Epsilon, maxt);
 						Intersection itsLight;
 						bool intersects = scene->rayIntersect(lightRay, itsLight);
 						if (intersects && itsLight.shape->isEmitter()) {
-							const Emitter* em = itsLight.shape->getEmitter();
-							Color3f Le = em->eval();
+							Color3f Le = itsLight.shape->getEmitter()->eval();
 							float cosTheta = std::max(0.0f, d.dot(n));
 							nori::BSDFQueryRecord bRec(d, its.toLocal(-ray.d), nori::ESolidAngle);
 							nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
-							float cosWi = d.dot(yN);
-							float pWi = (x-y).squaredNorm() / ( std::abs(-cosWi) * itsLight.shape->getArea() );
+							float pWi = Warp::squareToUniformConePdf(cosThetaMax);
 
 							Lr += brdfValue * Le * cosTheta / pWi;
 						}
