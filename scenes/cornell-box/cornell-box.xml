@@ -6,8 +6,8 @@
 	<integrator type="path_tracer">
 		<string name="tracerType" value="explicit"/>
 		<string name="termination" value="russian-roulette"/>
-		<float name="terminationProb" value="0.1"/>
-		<string name="directSampling" value="area"/>
+		<float name="terminationProb" value="0.3"/>
+		<string name="directSampling" value="solidAngle"/>
 		<string name="indirectSampling" value="cosine"/>
 	</integrator>
 

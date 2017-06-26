@@ -52,31 +52,50 @@ public:
 		for (const Emitter* emitter : scene->getEmitters()) {
 			const Shape* lightShape = emitter->getShape();
 			if (lightShape) { // is area light?
-				Color3f Le = emitter->eval();
+				if (m_directSampling == "solidAngle") {
+					Normal3f yN;
+					float pWi;
+					Vector3f d = emitter->sampleSolidAngle(sampler, its.p, yN, pWi);
 
-				Normal3f yN;
-				Point3f x = its.p;
-				Point3f y = emitter->sample(sampler, yN);
-				Vector3f d = (y - x).normalized();
+					Ray3f lightRay(its.p, d, Epsilon, maxt);
+					Intersection itsLight;
+					bool intersects = scene->rayIntersect(lightRay, itsLight);
+					if (intersects && itsLight.shape->isEmitter()) {
+						Color3f Le = itsLight.shape->getEmitter()->eval();
+						float cosTheta = std::max(0.0f, d.dot(n));
+						nori::BSDFQueryRecord bRec(d, its.toLocal(-ray.d), nori::ESolidAngle);
+						nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
 
-				Ray3f lightRay(x, d, Epsilon, maxt);
-				Intersection itsLight;
-				bool intersects = scene->rayIntersect(lightRay, itsLight);
-				if (intersects && itsLight.shape->isEmitter()) {
-					float cosTheta_i = std::max(0.0f, d.dot(n));
-					float cosTheta_o = std::max(0.0f, d.dot(yN));
-					float cosTheta = (cosTheta_i * cosTheta_o) / ((x - y).squaredNorm());
+						L_dir += brdfValue * Le * cosTheta / pWi;
+					}
+				}
+				else if (m_directSampling == "area") {
+					Color3f Le = emitter->eval();
 
-					float pA = 1.0f / lightShape->getArea();
+					Normal3f yN;
+					Point3f x = its.p;
+					Point3f y = emitter->sample(sampler, yN);
+					Vector3f d = (y - x).normalized();
 
-					nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle);
-					nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
+					Ray3f lightRay(x, d, Epsilon, maxt);
+					Intersection itsLight;
+					bool intersects = scene->rayIntersect(lightRay, itsLight);
+					if (intersects && itsLight.shape->isEmitter()) {
+						float cosTheta_i = std::max(0.0f, d.dot(n));
+						float cosTheta_o = std::max(0.0f, d.dot(yN));
+						float cosTheta = (cosTheta_i * cosTheta_o) / ((x - y).squaredNorm());
 
-					L_dir += brdfValue * Le * cosTheta / pA;
+						float pA = 1.0f / lightShape->getArea();
+
+						nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle);
+						nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
+
+						L_dir += brdfValue * Le * cosTheta / pA;
+					}
 				}
 			}
 		}
-
+		
 		// indirect illumination
 
 		// cast a random ray
