@@ -24,10 +24,15 @@ public:
 	}
 
 	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
-		return Li(scene, sampler, ray, 0);
+		if (m_tracerType == "explicit") {
+			return Li_explicit(scene, sampler, ray, 0);
+		}
+		else if (m_tracerType == "implicit") {
+			return Li_implicit(scene, sampler, ray, 0);
+		}
 	}
 
-	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray, int bounds) const {
+	Color3f Li_explicit(const Scene *scene, Sampler *sampler, const Ray3f &ray, int bounds) const {
 		if (m_termination == "russian-roulette") {
 			if (s_random.nextFloat() <= m_terminationProb) return Color3f(0.0f);
 		}
@@ -91,13 +96,64 @@ public:
 		}
 		nori::BSDFQueryRecord bRec(d, its.toLocal(-ray.d), nori::ESolidAngle);
 		nori::Color3f fr = its.shape->getBSDF()->eval(bRec);
-		Color3f L_ind = fr * Li(scene, sampler, traceRay, bounds++) * cosTheta / pWi;
+		Color3f L_ind = fr * Li_explicit(scene, sampler, traceRay, bounds++) * cosTheta / pWi;
 		if (m_termination == "russian-roulette") {
 			L_ind /= (1 - m_terminationProb);
 		}
 
 		Color3f Le(0.0f);
 		return Le + L_dir + L_ind;
+	}
+
+	Color3f Li_implicit(const Scene *scene, Sampler *sampler, const Ray3f &ray, int bounds) const {
+		if (m_termination == "russian-roulette") {
+			if (s_random.nextFloat() <= m_terminationProb) return Color3f(0.0f);
+		}
+		else if (m_termination == "path-depth") {
+			if (bounds > 15) return Color3f(0.0f);
+		}
+
+		Intersection its;
+		if (!scene->rayIntersect(ray, its))
+			return Color3f(0.0f);
+
+		Normal3f n = its.shFrame.n;
+		float maxt = scene->getBoundingBox().getExtents().norm();
+
+		// cast a random ray
+		Vector3f d = Warp::squareToCosineHemisphere(sampler->next2D());
+		d = its.toWorld(d); // transform to world space so it aligns with the its
+		d.normalize();
+		Ray3f traceRay(its.p, d, Epsilon, maxt);
+
+		nori::Color3f L(0.0f);
+		if (its.shape->isEmitter()) {
+			//direct illumination
+			const Emitter* emitter = its.shape->getEmitter();
+			L = emitter->eval();
+		}
+		else {
+			//indirect illumination
+			L = Li_implicit(scene, sampler, traceRay, bounds++);
+		}
+
+		float cosTheta, pWi;
+		if (m_indirectSampling == "cosine") {
+			cosTheta = 1.0f;
+			pWi = INV_PI;
+		}
+		else if (m_indirectSampling == "uniform") {
+			cosTheta = std::max(0.0f, d.dot(n));
+			pWi = INV_TWOPI;
+		}
+		nori::BSDFQueryRecord bRec(d, its.toLocal(-ray.d), nori::ESolidAngle);
+		nori::Color3f fr = its.shape->getBSDF()->eval(bRec);
+		Color3f Le(0.0f);
+		Color3f Lr = fr * L * cosTheta / pWi;
+		if (m_termination == "russian-roulette") {
+			Lr /= (1 - m_terminationProb);
+		}
+		return Le + Lr;
 	}
 
 	std::string toString() const {
