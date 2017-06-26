@@ -22,3 +22,4 @@ Debug
 x64
 *.exr
 ajax.obj
+/scenes/yilin/

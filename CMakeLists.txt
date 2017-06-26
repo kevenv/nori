@@ -95,6 +95,7 @@ add_executable(nori
   src/simple.cpp
   src/ao.cpp
   src/direct.cpp
+  src/path_tracer.cpp
   src/point_light.cpp
   src/area_light.cpp
 )
