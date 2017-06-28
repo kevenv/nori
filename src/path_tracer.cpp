@@ -63,7 +63,7 @@ public:
 					if (intersects && itsLight.shape->isEmitter()) {
 						Color3f Le = itsLight.shape->getEmitter()->eval();
 						float cosTheta = std::max(0.0f, d.dot(n));
-						nori::BSDFQueryRecord bRec(d, its.toLocal(-ray.d), nori::ESolidAngle);
+						nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
 						nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
 
 						L_dir += brdfValue * Le * cosTheta / pWi;
@@ -87,7 +87,7 @@ public:
 
 						float pA = 1.0f / lightShape->getArea();
 
-						nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle);
+						nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
 						nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
 
 						L_dir += brdfValue * Le * cosTheta / pA;
@@ -113,7 +113,7 @@ public:
 			cosTheta = std::max(0.0f, d.dot(n));
 			pWi = INV_TWOPI;
 		}
-		nori::BSDFQueryRecord bRec(d, its.toLocal(-ray.d), nori::ESolidAngle);
+		nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
 		nori::Color3f fr = its.shape->getBSDF()->eval(bRec);
 		Color3f L_ind = fr * Li_explicit(scene, sampler, traceRay, bounds++) * cosTheta / pWi;
 		if (m_termination == "russian-roulette") {
@@ -165,7 +165,7 @@ public:
 			cosTheta = std::max(0.0f, d.dot(n));
 			pWi = INV_TWOPI;
 		}
-		nori::BSDFQueryRecord bRec(d, its.toLocal(-ray.d), nori::ESolidAngle);
+		nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
 		nori::Color3f fr = its.shape->getBSDF()->eval(bRec);
 		Color3f Le(0.0f);
 		Color3f Lr = fr * L * cosTheta / pWi;

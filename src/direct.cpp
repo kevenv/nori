@@ -46,7 +46,7 @@ public:
 					const Emitter* emitter = itsLight.shape->getEmitter();
 					Color3f Le = emitter->eval();
 					float cosTheta = std::max(0.0f, d.dot(n));
-					nori::BSDFQueryRecord bRec(d, its.toLocal(-ray.d), nori::ESolidAngle);
+					nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
 					nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
 
 					Lr += brdfValue * Le * cosTheta;
@@ -78,7 +78,7 @@ public:
 
 							float pA = 1.0f / lightShape->getArea();
 
-							nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle);
+							nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
 							nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
 
 							Lr += brdfValue * Le * cosTheta / pA;
@@ -106,7 +106,7 @@ public:
 						if (intersects && itsLight.shape->isEmitter()) {
 							Color3f Le = itsLight.shape->getEmitter()->eval();
 							float cosTheta = std::max(0.0f, d.dot(n));
-							nori::BSDFQueryRecord bRec(d, its.toLocal(-ray.d), nori::ESolidAngle);
+							nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
 							nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
 
 							Lr += brdfValue * Le * cosTheta / pWi;

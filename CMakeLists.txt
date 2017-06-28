@@ -73,6 +73,7 @@ add_executable(nori
   src/chi2test.cpp
   src/common.cpp
   src/diffuse.cpp
+  src/phong.cpp
   src/gui.cpp
   src/independent.cpp
   src/main.cpp
