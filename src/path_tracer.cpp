@@ -17,6 +17,7 @@ public:
 		m_tracerType(props.getString("tracerType", "explicit")),
 		m_termination(props.getString("termination", "russian-roulette")),
 		m_terminationProb(props.getFloat("terminationProb", 0.2f)),
+		m_terminationBounds(props.getInteger("terminationBounds", 15)),
 		m_directSampling(props.getString("directSampling", "area")),
 		m_indirectSampling(props.getString("indirectSampling", "cosine"))
 	{
@@ -37,7 +38,7 @@ public:
 			if (s_random.nextFloat() <= m_terminationProb) return Color3f(0.0f);
 		}
 		else if(m_termination == "path-depth") {
-			if (bounds > 15) return Color3f(0.0f);
+			if (bounds > m_terminationBounds) return Color3f(0.0f);
 		}
 
 		Intersection its;
@@ -135,7 +136,7 @@ public:
 			if (s_random.nextFloat() <= m_terminationProb) return Color3f(0.0f);
 		}
 		else if (m_termination == "path-depth") {
-			if (bounds > 15) return Color3f(0.0f);
+			if (bounds > m_terminationBounds) return Color3f(0.0f);
 		}
 
 		Intersection its;
@@ -193,12 +194,14 @@ public:
 			" tracerType = %s\n"
 			" termination = %s\n"
 			" terminationProb = %d\n"
+			" terminationBounds = %d\n"
 			" directSampling = %s\n"
 			" indirectSampling = %s\n"
 			"]",
 			m_tracerType,
 			m_termination,
 			m_terminationProb,
+			m_terminationBounds,
 			m_directSampling,
 			m_indirectSampling
 		);
@@ -208,6 +211,7 @@ private:
 	const std::string m_tracerType;
 	const std::string m_termination;
 	const float m_terminationProb;
+	const int m_terminationBounds;
 	const std::string m_directSampling;
 	const std::string m_indirectSampling;
 };
