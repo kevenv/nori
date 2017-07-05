@@ -55,6 +55,27 @@ public:
 			Lr *= 2.0f * M_PI / m_sampleCount;
 
 		}
+		else if (m_samplingMethod == "brdf") {
+
+			for (int i = 0; i < m_sampleCount; ++i) {
+				nori::BSDFQueryRecord bRec(Vector3f(0.0f), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
+				nori::Color3f brdfValue = its.shape->getBSDF()->sample(bRec, sampler->next2D());
+				Vector3f d = its.toWorld(bRec.wi); // transform to world space so it aligns with the its
+				d.normalize();
+
+				Ray3f lightRay(its.p, d, Epsilon, maxt);
+				Intersection itsLight;
+				bool intersects = scene->rayIntersect(lightRay, itsLight);
+				if (intersects && itsLight.shape->isEmitter()) {
+					const Emitter* emitter = itsLight.shape->getEmitter();
+					Color3f Le = emitter->eval();
+					float cosTheta = std::max(d.dot(n), 0.0f);
+					Lr += brdfValue * Le * cosTheta;
+				}
+			}
+			Lr *= 1.0f / m_sampleCount;
+
+		}
 		else if (m_samplingMethod == "area") {
 
 			for (int i = 0; i < m_sampleCount; ++i) {
@@ -90,7 +111,7 @@ public:
 			Lr *= 1.0f / m_sampleCount;
 
 		}
-		else {
+		else if (m_samplingMethod == "solidangle") {
 			
 			for (int i = 0; i < m_sampleCount; ++i) {
 				for (const Emitter* emitter : scene->getEmitters()) {
