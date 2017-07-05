@@ -11,10 +11,9 @@ NORI_NAMESPACE_BEGIN
 class Phong : public BSDF {
 public:
     Phong(const PropertyList &propList):
-		m_albedo(propList.getColor("albedo", Color3f(1.0f))),
 		m_shininess(propList.getFloat("shininess", 1.0f)),
-		m_diffuseReflectance(propList.getFloat("diffuseReflectance", 0.25f)),
-		m_specularReflectance(propList.getFloat("specularReflectance", 1.0f))
+		m_diffuseReflectance(propList.getColor("diffuseReflectance", Color3f(1.0f,1.0f,1.0f))),
+		m_specularReflectance(propList.getColor("specularReflectance", Color3f(1.0f, 1.0f, 1.0f)))
 	{
 
     }
@@ -31,7 +30,7 @@ public:
 		Vector3f wr(2*bRec.N * (bRec.N.dot(bRec.wi)) - bRec.wi);
 		float alpha = std::max(wr.dot(bRec.wo), 0.0f);
 		float specular = (m_shininess + 2) / (2 * M_PI) * pow(alpha, m_shininess);
-		return m_diffuseReflectance * m_albedo/M_PI + m_specularReflectance * specular;
+		return (m_diffuseReflectance / M_PI) + m_specularReflectance * specular; //* Frame::cosTheta(bRec.wo);
     }
 
     /// Compute the density of \ref sample() wrt. solid angles
@@ -52,25 +51,22 @@ public:
     std::string toString() const {
         return tfm::format(
             "Phong[\n"
-			"  albedo = %s\n"
-            "  shinyness = %d\n"
-			"  diffuseReflectance = %d\n"
-			"  specularReflectance = %d\n"
+            "  shininess = %d\n"
+			"  diffuseReflectance = %s\n"
+			"  specularReflectance = %s\n"
             "]",
-			m_albedo.toString(),
 			m_shininess,
-			m_diffuseReflectance,
-			m_specularReflectance
+			m_diffuseReflectance.toString(),
+			m_specularReflectance.toString()
 			);
     }
 
     EClassType getClassType() const { return EBSDF; }
 
 private:
-	const Color3f m_albedo;
 	const float m_shininess;
-	const float m_diffuseReflectance;
-	const float m_specularReflectance;
+	const Color3f m_diffuseReflectance;
+	const Color3f m_specularReflectance;
 };
 
 NORI_REGISTER_CLASS(Phong, "phong");

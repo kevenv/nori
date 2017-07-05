@@ -23,7 +23,11 @@
 	<shape type="sphere">
 		<point name="center" value="0,0,0"/>
         <float name="radius" value="1"/>
-		<bsdf type="diffuse"/>
+		<bsdf type="phong">
+			<float name="shininess" value="1.0"/>
+			<color name="diffuseReflectance" value="1,1,1"/>
+			<color name="specularReflectance" value="1,1,1"/>
+		</bsdf>
 	</shape>
 
 	<!-- Ground plane -->
@@ -40,7 +44,7 @@
 	<!-- Render the scene as viewed by a perspective camera -->
 	<camera type="perspective">
 		<transform name="toWorld">
-			<lookat target="0,0,0" origin="4,4,0" up="0,0,1"/>
+			<lookat target="0,0,0" origin="0,-4,0" up="0,0,1"/>
 		</transform>
 
 		<!-- Field of view: 40 degrees -->
