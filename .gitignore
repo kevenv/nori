@@ -23,3 +23,7 @@ x64
 *.exr
 ajax.obj
 /scenes/yilin/
+
+/cmake-build-debug
+/cmake-build-release
+/.idea

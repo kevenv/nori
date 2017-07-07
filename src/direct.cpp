@@ -138,8 +138,83 @@ public:
 			Lr *= 1.0f / m_sampleCount;
 
 		}
+		else if (m_samplingMethod == "mis") {
+
+			int m_emitterSamples = 1;
+			int m_brdfSamples = 1;
+
+			for (const Emitter* emitter : scene->getEmitters()) {
+				const Shape* lightShape = emitter->getShape();
+				if (lightShape) { // is area light?
+
+					// light sampling
+					for (int i = 0; i < m_emitterSamples; ++i) {
+
+						Color3f Le = emitter->eval();
+
+						Normal3f yN;
+						Point3f x = its.p;
+						Point3f y = emitter->sample(sampler, yN);
+						Vector3f d = (y - x).normalized();
+
+						Ray3f lightRay(x, d, Epsilon, maxt);
+						Intersection itsLight;
+						bool intersects = scene->rayIntersect(lightRay, itsLight);
+						if (intersects && itsLight.shape->isEmitter()) {
+							float cosTheta_i = std::max(0.0f, d.dot(n));
+							float cosTheta_o = std::max(0.0f, d.dot(yN));
+							float cosTheta = (cosTheta_i * cosTheta_o) / ((x - y).squaredNorm());
+
+							float pA = 1.0f / lightShape->getArea();
+
+							nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
+							nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
+
+							float pdfBrdf = its.shape->getBSDF()->pdf(bRec);
+							Lr += brdfValue * Le * cosTheta / pA;
+							Lr *= balanceHeuristic(m_emitterSamples, pA, m_brdfSamples, pdfBrdf);
+						}
+
+					}
+					Lr *= 1.0f / m_emitterSamples;
+
+					// BRDF sampling
+					for (int i = 0; i < m_brdfSamples; ++i) {
+						nori::BSDFQueryRecord bRec(Vector3f(0.0f), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
+						nori::Color3f brdfValue = its.shape->getBSDF()->sample(bRec, sampler->next2D());
+						Vector3f d = its.toWorld(bRec.wi); // transform to world space so it aligns with the its
+						d.normalize();
+
+						Ray3f lightRay(its.p, d, Epsilon, maxt);
+						Intersection itsLight;
+						bool intersects = scene->rayIntersect(lightRay, itsLight);
+						if (intersects && itsLight.shape->isEmitter()) {
+							const Emitter* emitter = itsLight.shape->getEmitter();
+							Color3f Le = emitter->eval();
+							float cosTheta = std::max(d.dot(n), 0.0f);
+							Lr += brdfValue * Le * cosTheta;
+
+							float pdfEmitter = 1.0f / lightShape->getArea();
+							Lr *= balanceHeuristic(m_brdfSamples, its.shape->getBSDF()->pdf(bRec), m_emitterSamples, pdfEmitter);
+						}
+					}
+					Lr *= 1.0f / m_brdfSamples;
+
+				}
+
+			}
+
+		}
 
 		return Lr;
+	}
+
+	float balanceHeuristic(int n1, float pdf1, int n2, float pdf2) const {
+		return (n1 * pdf1) / (n1 * pdf1 + n2 * pdf2);
+	}
+
+	float powerHeuristic(int n1, float pdf1, int n2, float pdf2, float power) {
+		return powf(n1 * pdf1, power) / pow(n1 * pdf1 + n2 * pdf2, power);
 	}
 
 	std::string toString() const {
