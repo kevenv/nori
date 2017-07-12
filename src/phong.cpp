@@ -11,7 +11,7 @@ NORI_NAMESPACE_BEGIN
 class Phong : public BSDF {
 public:
     Phong(const PropertyList &propList):
-		m_shininess(propList.getFloat("shininess", 1.0f)),
+		m_shininess(propList.getInteger("shininess", 1)),
 		m_diffuseReflectance(propList.getColor("diffuseReflectance", Color3f(1.0f,1.0f,1.0f))),
 		m_specularReflectance(propList.getColor("specularReflectance", Color3f(1.0f, 1.0f, 1.0f)))
 	{
@@ -78,7 +78,7 @@ public:
     EClassType getClassType() const { return EBSDF; }
 
 private:
-	const float m_shininess;
+	const int m_shininess;
 	const Color3f m_diffuseReflectance;
 	const Color3f m_specularReflectance;
 };

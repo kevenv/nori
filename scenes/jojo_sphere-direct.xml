@@ -24,7 +24,7 @@
 		<point name="center" value="0,0,0"/>
         <float name="radius" value="1"/>
 		<bsdf type="phong">
-			<float name="shininess" value="1.0"/>
+			<integer name="shininess" value="10"/>
 			<color name="diffuseReflectance" value="1,0,0"/>
 			<color name="specularReflectance" value="1,1,1"/>
 		</bsdf>
