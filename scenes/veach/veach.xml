@@ -30,7 +30,7 @@
 		<float name="radius" value="0.5"/>
 
 		<emitter type="area">
-			<color name="radiance" value="800, 800, 800"/>
+			<color name="radiance" value="100, 100, 100"/>
 		</emitter>
 
 		<bsdf type="diffuse">
@@ -43,7 +43,7 @@
 		<float name="radius" value="0.1"/>
 
 		<emitter type="area">
-			<color name="radiance" value="100, 100, 100"/>
+			<color name="radiance" value="1, 0.9, 0"/>
 		</emitter>
 
 		<bsdf type="diffuse">
@@ -56,7 +56,7 @@
 		<float name="radius" value="0.03333"/>
 
 		<emitter type="area">
-			<color name="radiance" value="901.803,901.803,901.803"/>
+			<color name="radiance" value="1,0,0"/>
 		</emitter>
 
 		<bsdf type="diffuse">
@@ -69,7 +69,7 @@
 		<float name="radius" value="0.3"/>
 
 		<emitter type="area">
-			<color name="radiance" value="11.1111,11.1111,11.1111"/>
+			<color name="radiance" value="0,1,0.86"/>
 		</emitter>
 
 		<bsdf type="diffuse">
@@ -82,7 +82,7 @@
 		<float name="radius" value="0.9"/>
 
 		<emitter type="area">
-			<color name="radiance" value="1.23457,1.23457,1.23457"/>
+			<color name="radiance" value="0,0.2,1"/>
 		</emitter>
 
 		<bsdf type="diffuse">
