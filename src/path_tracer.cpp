@@ -45,6 +45,17 @@ public:
 		if (!scene->rayIntersect(ray, its))
 			return Color3f(0.0f);
 
+        if(its.shape->isEmitter()) {
+            // stop indirect illumination if hit a light
+            if(bounds > 0) {
+                return Color3f(0.0f);
+            }
+            // color lights
+            else {
+                return Color3f(its.shape->getEmitter()->eval());
+            }
+        }
+
 		Normal3f n = its.shFrame.n;
 		float maxt = scene->getBoundingBox().getExtents().norm();
 
@@ -122,7 +133,7 @@ public:
 		}
 		nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
 		nori::Color3f fr = its.shape->getBSDF()->eval(bRec);
-		Color3f L_ind = fr * Li_explicit(scene, sampler, traceRay, bounds++) * cosTheta / pWi;
+		Color3f L_ind = fr * Li_explicit(scene, sampler, traceRay, ++bounds) * cosTheta / pWi;
 		if (m_termination == "russian-roulette") {
 			L_ind /= (1 - m_terminationProb);
 		}
@@ -166,7 +177,7 @@ public:
 		}
 		else {
 			//indirect illumination
-			L = Li_implicit(scene, sampler, traceRay, bounds++);
+			L = Li_implicit(scene, sampler, traceRay, ++bounds);
 		}
 
 		float cosTheta, pWi;
