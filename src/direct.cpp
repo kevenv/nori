@@ -58,9 +58,9 @@ public:
 		else if (m_samplingMethod == "brdf") {
 
 			for (int i = 0; i < m_sampleCount; ++i) {
-				nori::BSDFQueryRecord bRec(Vector3f(0.0f), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
+				nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), Vector3f(0.0f), nori::ESolidAngle, its.toLocal(n));
 				nori::Color3f brdfValue = its.shape->getBSDF()->sample(bRec, sampler->next2D());
-				Vector3f d = its.toWorld(bRec.wi); // transform to world space so it aligns with the its
+				Vector3f d = its.toWorld(bRec.wo); // transform to world space so it aligns with the its
 				d.normalize();
 
 				Ray3f lightRay(its.p, d, Epsilon, maxt);
@@ -69,8 +69,7 @@ public:
 				if (intersects && itsLight.shape->isEmitter()) {
 					const Emitter* emitter = itsLight.shape->getEmitter();
 					Color3f Le = emitter->eval();
-					float cosTheta = std::max(d.dot(n), 0.0f);
-					Lr += brdfValue * Le * cosTheta;
+					Lr += brdfValue * Le;
 				}
 			}
 			Lr *= 1.0f / m_sampleCount;
@@ -180,9 +179,9 @@ public:
 
 					// BRDF sampling
 					for (int i = 0; i < m_brdfSamples; ++i) {
-						nori::BSDFQueryRecord bRec(Vector3f(0.0f), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
+						nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), Vector3f(0.0f), nori::ESolidAngle, its.toLocal(n));
 						nori::Color3f brdfValue = its.shape->getBSDF()->sample(bRec, sampler->next2D());
-						Vector3f d = its.toWorld(bRec.wi); // transform to world space so it aligns with the its
+						Vector3f d = its.toWorld(bRec.wo); // transform to world space so it aligns with the its
 						d.normalize();
 
 						Ray3f lightRay(its.p, d, Epsilon, maxt);
@@ -191,8 +190,7 @@ public:
 						if (intersects && itsLight.shape->isEmitter()) {
 							const Emitter* emitter = itsLight.shape->getEmitter();
 							Color3f Le = emitter->eval();
-							float cosTheta = std::max(d.dot(n), 0.0f);
-							Lr += brdfValue * Le * cosTheta;
+							Lr += brdfValue * Le;
 
 							float pdfEmitter = 1.0f / lightShape->getArea();
 							Lr *= balanceHeuristic(m_brdfSamples, its.shape->getBSDF()->pdf(bRec), m_emitterSamples, pdfEmitter);

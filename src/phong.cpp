@@ -30,7 +30,7 @@ public:
 		Vector3f wr(2*bRec.N * (bRec.N.dot(bRec.wi)) - bRec.wi);
 		float alpha = std::max(wr.dot(bRec.wo), 0.0f);
 		float specular = (m_shininess + 2) / (2 * M_PI) * pow(alpha, m_shininess);
-		return (m_diffuseReflectance / M_PI) + m_specularReflectance * specular; //* Frame::cosTheta(bRec.wo);
+		return (m_diffuseReflectance / M_PI) + m_specularReflectance * specular;
     }
 
     /// Compute the density of \ref sample() wrt. solid angles
@@ -42,19 +42,25 @@ public:
 			|| Frame::cosTheta(bRec.wo) <= 0)
 			return 0.0f;
 
-		float theta = sphericalCoordinates(bRec.wi).x();
+		float theta = sphericalCoordinates(bRec.wo).x();
 		return (m_shininess + 2)/(2*M_PI) * pow(cos(theta), m_shininess);
     }
 
     /// Draw a a sample from the BRDF model
     Color3f sample(BSDFQueryRecord &bRec, const Point2f &sample) const {
+        if (Frame::cosTheta(bRec.wi) <= 0)
+            return Color3f(0.0f);
+
 		bRec.measure = ESolidAngle;
 
 		float theta = acos(pow( (1 - sample.x()), 1.0f/(m_shininess+2) ));
 		float phi = 2*M_PI*sample.y();
-		bRec.wi = sphericalDirection(theta, phi);
+		bRec.wo = sphericalDirection(theta, phi);
 
-		return eval(bRec) / pdf(bRec);
+        /* Relative index of refraction: no change */
+        bRec.eta = 1.0f;
+
+		return eval(bRec) / pdf(bRec) * Frame::cosTheta(bRec.wo);
     }
 
     bool isDiffuse() const {
