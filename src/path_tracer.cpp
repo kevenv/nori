@@ -112,15 +112,20 @@ public:
 
 		// cast a random ray
 		Vector3f d;
-		if (m_indirectSampling == "cosine") {
-			d = Warp::squareToCosineHemisphere(sampler->next2D());
-		}
-		else if (m_indirectSampling == "uniform") {
-			d = Warp::squareToUniformHemisphere(sampler->next2D());
-		}
-		d = its.toWorld(d); // transform to world space so it aligns with the its
-		d.normalize();
-		Ray3f traceRay(its.p, d, Epsilon, maxt);
+        Ray3f traceRay;
+        // avoid double counting DI in ID
+        Intersection itsTmp;
+        do {
+            if (m_indirectSampling == "cosine") {
+                d = Warp::squareToCosineHemisphere(sampler->next2D());
+            }
+            else if (m_indirectSampling == "uniform") {
+                d = Warp::squareToUniformHemisphere(sampler->next2D());
+            }
+            d = its.toWorld(d); // transform to world space so it aligns with the its
+            d.normalize();
+            traceRay = Ray3f(its.p, d, Epsilon, maxt);
+        } while(bounds == 0 && scene->rayIntersect(traceRay, itsTmp) && itsTmp.shape->isEmitter());
 
 		float cosTheta, pWi;
 		if (m_indirectSampling == "cosine") {
