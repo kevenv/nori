@@ -6,8 +6,11 @@
 
 	<!-- Use a direct illumination integrator -->
 	<integrator type="direct">
-		<integer name="shadingSamples" value="1"/>
+		<integer name="sampleCount" value="512"/>
+
 		<string name="samplingMethod" value="solidangle"/>
+		<integer name="emitterSamples" value="512"/>
+		<integer name="bsdfSamples" value="512"/>
 	</integrator>
 
 	<!-- Illuminate using an area light -->
@@ -24,7 +27,7 @@
 		<point name="center" value="0,0,0"/>
         <float name="radius" value="1"/>
 		<bsdf type="phong">
-			<integer name="shininess" value="10"/>
+			<float name="shininess" value="10"/>
 			<color name="diffuseReflectance" value="1,0,0"/>
 			<color name="specularReflectance" value="1,1,1"/>
 		</bsdf>

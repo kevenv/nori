@@ -5,13 +5,15 @@
 -->
 <scene>
 	<sampler type="independent">
-		<integer name="sampleCount" value="16"/>
+		<integer name="sampleCount" value="1"/>
 	</sampler>
 
 	<integrator type="direct">
+		<integer name="sampleCount" value="128"/>
+
 		<string name="samplingMethod" value="mis"/>
-		<integer name="emitterSamples" value="16"/>
-		<integer name="brdfSamples" value="16"/>
+		<integer name="emitterSamples" value="128"/>
+		<integer name="brdfSamples" value="128"/>
 	</integrator>
 
 	<camera type="perspective">
@@ -93,44 +95,40 @@
 	<shape type="obj">
 		<string name="filename" value="plate1.obj"/>
 
-		<bsdf type="diffuse">
-			<color name="albedo" value="0.07,0.09,0.13"/>
+		<bsdf type="phong">
+			<color name="diffuseReflectance" value="0.07,0.09,0.13"/>
 			<color name="specularReflectance" value="1,1,1"/>
-			<float name="intIOR" value="2"/>
-			<float name="shininess" value="0.005"/>
+			<float name="shininess" value="10000"/>
 		</bsdf>
 	</shape>
 
 	<shape type="obj">
 		<string name="filename" value="plate2.obj"/>
 
-		<bsdf type="diffuse">
-			<color name="albedo" value="0.07,0.09,0.13"/>
+		<bsdf type="phong">
+			<color name="diffuseReflectance" value="0.07,0.09,0.13"/>
 			<color name="specularReflectance" value="1,1,1"/>
-			<float name="intIOR" value="2"/>
-			<float name="shininess" value="0.02"/>
+			<float name="shininess" value="1000"/>
 		</bsdf>
 	</shape>
 
 	<shape type="obj">
 		<string name="filename" value="plate3.obj"/>
 
-		<bsdf type="diffuse">
-			<color name="albedo" value="0.07,0.09,0.13"/>
+		<bsdf type="phong">
+			<color name="diffuseReflectance" value="0.07,0.09,0.13"/>
 			<color name="specularReflectance" value="1,1,1"/>
-			<float name="intIOR" value="2"/>
-			<float name="shininess" value="0.05"/>
+			<float name="shininess" value="100"/>
 		</bsdf>
 	</shape>
 
 	<shape type="obj">
 		<string name="filename" value="plate4.obj"/>
 
-		<bsdf type="diffuse">
-			<color name="albedo" value="0.07,0.09,0.13"/>
+		<bsdf type="phong">
+			<color name="diffuseReflectance" value="0.07,0.09,0.13"/>
 			<color name="specularReflectance" value="1,1,1"/>
-			<float name="intIOR" value="2"/>
-			<float name="shininess" value="0.1"/>
+			<float name="shininess" value="50"/>
 		</bsdf>
 	</shape>
 
