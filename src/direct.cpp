@@ -147,6 +147,7 @@ public:
 				if (lightShape) { // is area light?
 
 					for (int i = 0; i < m_emitterSamples; ++i) {
+						/*
 						Color3f Le = emitter->eval();
 
 						Normal3f yN;
@@ -172,7 +173,8 @@ public:
 
                             Lr += brdfValue * Le * cosTheta * weight / (pA * m_emitterSamples);
 						}
-                        /*
+						*/
+
                         Normal3f yN;
                         float pWi;
                         Vector3f d = emitter->sampleSolidAngle(sampler, its.p, yN, pWi);
@@ -191,7 +193,7 @@ public:
 
                             Lr += brdfValue * Le * cosTheta * weight / (pWi * m_emitterSamples);
                         }
-                        */
+
 					}
 
 				}
@@ -211,7 +213,8 @@ public:
                     const Emitter* emitter = itsLight.shape->getEmitter();
                     Color3f Le = emitter->eval();
 
-                    float pdfEmitter = 1.0f / itsLight.shape->getArea();
+					float pdfEmitter; Normal3f yN;
+					emitter->sampleSolidAngle(sampler, its.p, yN, pdfEmitter);
                     float weight = balanceHeuristic(m_brdfSamples, its.shape->getBSDF()->pdf(bRec), m_emitterSamples, pdfEmitter);
 
                     Lr += brdfValue * Le * weight / m_brdfSamples;
