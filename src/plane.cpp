@@ -12,14 +12,15 @@ public:
 	Plane(const PropertyList &propList):
 		m_center(propList.getPoint("center", Point3f(0.0f))),
 		m_width(propList.getFloat("width", 1.0f)),
-		m_height(propList.getFloat("height", 1.0f))
+		m_height(propList.getFloat("height", 1.0f)),
+		m_normalZ(propList.getFloat("normalZ",1.0f))
 	{
-		m_bbox.expandBy(Vector3f( -m_width/2,  m_height/2, 0.0f));
-		m_bbox.expandBy(Vector3f(  m_width/2,  m_height/2, 0.0f));
-		m_bbox.expandBy(Vector3f(  m_width/2, -m_height/2, 0.0f));
-		m_bbox.expandBy(Vector3f( -m_width/2, -m_height/2, 0.0f));
+		m_bbox.expandBy(Vector3f( -m_width/2,  m_height/2, 0.0f) + m_center);
+		m_bbox.expandBy(Vector3f(  m_width/2,  m_height/2, 0.0f) + m_center);
+		m_bbox.expandBy(Vector3f(  m_width/2, -m_height/2, 0.0f) + m_center);
+		m_bbox.expandBy(Vector3f( -m_width/2, -m_height/2, 0.0f) + m_center);
 
-		m_normal = Vector3f(0.0f, 0.0f, 1.0f); //todo: plane is hardcoded for Z=0
+		m_normal = Vector3f(0.0f, 0.0f, m_normalZ); //todo: plane is hardcoded for Z=0
 	}
 
 	virtual uint32_t getPrimitiveCount() const override {
@@ -100,6 +101,8 @@ protected:
 	Point3f m_center;
 	float m_width;
 	float m_height;
+
+	float m_normalZ; //todo: set normal x,y,z
 
 	Normal3f m_normal;
 };
