@@ -26,7 +26,7 @@
 		<float name="width" value="1"/>
 		<float name="height" value="1"/>
 		<emitter type="area">
-			<color name="radiance" value="10,10,10"/>
+			<color name="radiance" value="40,40,40"/>
 		</emitter>
 	</shape>
 
