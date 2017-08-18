@@ -23,6 +23,11 @@ public:
 	}
 
     void preprocess(const Scene *scene) override {
+        for(int i = 0; i < m_photonCount; ++i) {
+            m_photonMap[i].x = Point3f(0);
+            m_photonMap[i].w = Vector3f(0);
+            m_photonMap[i].phi = Color3f(0);
+        }
         generatePhotonMap(scene);
     }
 
@@ -31,7 +36,7 @@ public:
 
         while(!haveEnoughPhotons()) {
             const Emitter& em = chooseRandomEmitter(scene);
-            Photon& p = emitPhotonFromEmitter(em, sampler.get());
+            Photon p = emitPhotonFromEmitter(em, sampler.get());
             tracePhoton(p, scene, sampler.get());
         }
 
@@ -48,48 +53,56 @@ public:
         return *scene->getEmitters()[0]; //todo
     }
 
-    Photon& emitPhotonFromEmitter(const Emitter& em, Sampler* sampler) {
+    Photon emitPhotonFromEmitter(const Emitter& em, Sampler* sampler) {
         Photon p; // don't store 'starting' photons directly on the emitter
 
         // sample position
-        Normal3f n; //todo: need -n?
+        Normal3f n;
         p.x = em.sample(sampler, n);
+        //n = -n; //todo: need -n? w rect light
         float pdfX = 1.0f / em.getShape()->getArea();
 
         // sample direction
-        Vector3f wLoc = Warp::squareToCosineHemisphere(sampler->next2D());
-        float pdfW = Warp::squareToCosineHemispherePdf(wLoc);
+        Vector3f wLoc = Warp::squareToUniformHemisphere(sampler->next2D()); //todo: hemisphere for sphere light, cosine for rect light
+        float pdfW = Warp::squareToUniformHemispherePdf(wLoc);
         Frame N(n);
         p.w = N.toWorld(wLoc);
+        p.w.normalize();
 
         // compute power
         Color3f Le = em.eval();
         float cosTheta = std::max(0.0f,p.w.dot(n));
-        p.phi = 1/m_photonCount * Le * cosTheta / pdfX*pdfW;
+        p.phi = 1.0f/m_photonCount * Le * cosTheta / pdfX*pdfW;
+
+        return p;
     }
 
     void tracePhoton(const Photon& p, const Scene* scene, Sampler* sampler) {
+        float maxt = scene->getBoundingBox().getExtents().norm();
+
         Intersection its;
-        Ray3f ray(p.x, p.w);
+        Ray3f ray(p.x, p.w, Epsilon, maxt);
         if(scene->rayIntersect(ray, its)) {
             //store photon if diffuse
-            m_photonMap[m_currentPhotonCount].x = its.p;
-            m_photonMap[m_currentPhotonCount].w = p.w;
-            m_photonMap[m_currentPhotonCount].phi = p.phi;
+            if(!its.shape->isEmitter()) {
+                m_photonMap[m_currentPhotonCount].x = its.p;
+                m_photonMap[m_currentPhotonCount].w = p.w;
+                m_photonMap[m_currentPhotonCount].phi = p.phi;
 
-            if(!haveEnoughPhotons()) {
-                return; // no more photons todo: will that break things?
+                if (haveEnoughPhotons()) {
+                    return; // no more photons todo: will that break things?
+                }
+                m_currentPhotonCount++;
             }
-            m_currentPhotonCount++;
 
             // scatter photon
-            BSDFQueryRecord bRec(p.w, Vector3f(0.0f), ESolidAngle);
+            BSDFQueryRecord bRec(its.toLocal(p.w), Vector3f(0.0f), ESolidAngle);
             Color3f brdfValue = its.shape->getBSDF()->sample(bRec, sampler->next2D());
 
             // compute new photon power
             Photon p_;
             p_.x = its.p;
-            p_.w = bRec.wo;
+            p_.w = its.toWorld(bRec.wo);
 
             Normal3f n(its.shFrame.n);
             float cosTheta = std::max(0.0f,p_.w.dot(n));
@@ -124,15 +137,33 @@ public:
 	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const override {
 		/* Find the surface that is visible in the requested direction */
 		Intersection its;
-		if (!scene->rayIntersect(ray, its))
-			return Color3f(0.0f);
-
-		if (its.shape->isEmitter()) {
+        if (!scene->rayIntersect(ray, its)) {
+            return 0.0f;
+        }
+        if (its.shape->isEmitter()) {
 			return its.shape->getEmitter()->eval();
 		}
 
-        Color3f Lr(0.0f);
-		return Lr;
+        for(int i = 0; i < m_photonCount; ++i) {
+            // ray-point intersection
+            Point3f P = m_photonMap[i].x;
+
+            // point is in ray if PO || TO
+            Vector3f PO(P - ray.o);
+            Vector3f TO(ray.o + 1*ray.d - ray.o);
+
+            // A || B and + <=> A*B == |A|*|B|
+            bool intersects = std::abs(PO.dot(TO)-(PO.norm() * TO.norm())) <= 1e-6f;
+            //float dot = PO.dot(TO);
+            //bool intersects = std::abs(dot*dot - PO.squaredNorm()*TO.squaredNorm()) <= 1e-6f;
+            if(intersects) {
+                BSDFQueryRecord bRec(Vector3f(1.0f), its.toLocal(-ray.d), ESolidAngle);
+                Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
+                return Color3f(1.0f,0.0f,0.0f);
+            }
+        }
+
+        return 0.0f;
 	}
 
 	std::string toString() const override {
