@@ -73,8 +73,8 @@ public:
         float pdfX = 1.0f / em.getShape()->getArea();
 
         // sample direction
-        Vector3f wLoc = Warp::squareToUniformHemisphere(sampler->next2D()); //todo: hemisphere for sphere light, cosine for rect light
-        float pdfW = Warp::squareToUniformHemispherePdf(wLoc);
+        Vector3f wLoc = Warp::squareToUniformSphere(sampler->next2D()); //todo: sphere for sphere light, cosine for rect light
+        float pdfW = Warp::squareToUniformSpherePdf(wLoc);
         Frame N(n);
         p.w = N.toWorld(wLoc);
         p.w.normalize();
