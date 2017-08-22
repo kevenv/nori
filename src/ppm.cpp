@@ -4,6 +4,9 @@
 #include <nori/warp.h>
 #include <nori/bsdf.h>
 #include <nori/emitter.h>
+#include <nori/kdtree.h>
+
+//#define USE_NAIVE_KNN
 
 NORI_NAMESPACE_BEGIN
 
@@ -30,6 +33,7 @@ public:
         m_currentPhotonCount(0)
 	{
         m_photonMap.resize(m_photonCount);
+        m_KDTree.reserve(m_photonCount);
 	}
 
     void preprocess(const Scene *scene) override {
@@ -53,6 +57,13 @@ public:
         for(int i = 0; i < m_photonCount; ++i) {
             m_photonMap[i].phi /= m_photonCount;
         }
+
+        // build KD-Tree
+        for(int i = 0; i < m_photonCount; ++i) {
+            PhotonKDTreeNode node(m_photonMap[i].x, i);
+            m_KDTree.push_back(node);
+        }
+        m_KDTree.build();
     }
 
     bool haveEnoughPhotons() {
@@ -156,6 +167,7 @@ public:
 		}
 
         // get k nearest photons
+#ifdef USE_NAIVE_KNN
         std::vector<PhotonDist> dist(m_photonCount);
         for(int i = 0; i < m_photonCount; ++i) {
             Vector3f d = its.p - m_photonMap[i].x;
@@ -170,14 +182,28 @@ public:
             int idx = dist[i].idx;
             nearestPhotons[i] = m_photonMap[idx];
         }
-        float r = dist[m_kPhotons-1].dist; // distance to the k-th photon
+        float r2 = dist[m_kPhotons-1].dist; r2*=r2; // distance to the k-th photon
+#else
+        std::vector<PointKDTree<PhotonKDTreeNode>::SearchResult> results(m_kPhotons+1); // + 1 extra for nnSearch impl
+        m_KDTree.nnSearch(its.p, m_kPhotons, &results[0]);
+
+        std::sort(results.begin(), results.end()); //ascending order
+
+        std::vector<Photon> nearestPhotons(m_kPhotons);
+        for(int i = 0; i < m_kPhotons; ++i) {
+            unsigned int idxKD = results[i].index;
+            PhotonMapIdx idx = m_KDTree[idxKD].getData();
+            nearestPhotons[i] = m_photonMap[idx];
+        }
+        float r2 = results[m_kPhotons-1].distSquared; // distance to the k-th photon
+#endif
 
         // compute radiance estimate from k nearest photons
         Color3f Lr(0.0f);
         for(int i = 0; i < nearestPhotons.size()-1; ++i) { //ignore the k-th photon
             BSDFQueryRecord bRec(its.toLocal(m_photonMap[i].w), its.toLocal(-ray.d), ESolidAngle);
             Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
-            Lr += brdfValue * nearestPhotons[i].phi / (M_PI*r*r);
+            Lr += brdfValue * nearestPhotons[i].phi / (M_PI*r2);
         }
         return Lr;
 
@@ -222,6 +248,9 @@ private:
 
     std::vector<Photon> m_photonMap;
     int m_currentPhotonCount;
+    typedef unsigned int PhotonMapIdx;
+    typedef GenericKDTreeNode<Vector3f, PhotonMapIdx> PhotonKDTreeNode;
+    PointKDTree<PhotonKDTreeNode> m_KDTree;
 };
 
 NORI_REGISTER_CLASS(PPM, "ppm");

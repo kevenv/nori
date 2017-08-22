@@ -44,6 +44,7 @@ add_executable(nori
   include/nori/bsdf.h
   include/nori/accel.h
   include/nori/bvh.h
+  include/nori/kdtree.h
   include/nori/camera.h
   include/nori/color.h
   include/nori/common.h
