@@ -30,6 +30,7 @@ public:
 	PPM(const PropertyList &props):
         m_photonCount(props.getInteger("photonCount", 100)),
         m_kPhotons(props.getInteger("kPhotons", 10)),
+        m_samplesFinalGathering(props.getInteger("samplesFinalGathernig",10)),
         m_currentPhotonCount(0)
 	{
         m_photonMap.resize(m_photonCount);
@@ -166,6 +167,42 @@ public:
 			return its.shape->getEmitter()->eval();
 		}
 
+        // final gathering
+        if(m_samplesFinalGathering > 0) {
+            Normal3f n = its.shFrame.n;
+            float maxt = scene->getBoundingBox().getExtents().norm();
+
+            Color3f Lr(0.0f);
+            for (int i = 0; i < m_samplesFinalGathering; ++i) {
+                Vector3f d = Warp::squareToUniformHemisphere(sampler->next2D());
+                float pdf = Warp::squareToUniformHemispherePdf(d);
+                d = its.toWorld(d); // transform to world space so it aligns with the its
+                d.normalize();
+                Ray3f gatherRay(its.p, d, Epsilon, maxt);
+
+                Intersection itsGather;
+                bool intersects = scene->rayIntersect(gatherRay, itsGather);
+                if (intersects && !itsGather.shape->isEmitter()) {
+                    Color3f Le = computeLrFromDensityEstimation(gatherRay, itsGather);
+                    float cosTheta = std::max(0.0f, d.dot(n));
+                    nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle);
+                    nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
+
+                    Lr += brdfValue * Le * cosTheta / pdf;
+                }
+            }
+            Lr *= 1.0f / m_samplesFinalGathering;
+
+            return Lr;
+        }
+        else {
+            return computeLrFromDensityEstimation(ray, its);
+        }
+
+        //photonMapViewer(ray, its);
+	}
+
+    Color3f computeLrFromDensityEstimation(const Ray3f& ray, const Intersection& its) const {
         // get k nearest photons
 #ifdef USE_NAIVE_KNN
         std::vector<PhotonDist> dist(m_photonCount);
@@ -206,9 +243,9 @@ public:
             Lr += brdfValue * nearestPhotons[i].phi / (M_PI*r2);
         }
         return Lr;
+    }
 
-        /*
-        // Photon map viewer
+    Color3f photonMapViewer(const Ray3f& ray, const Intersection& its) {
         for(int i = 0; i < m_photonCount; ++i) {
             // ray-point intersection
             Point3f P = m_photonMap[i].x;
@@ -228,8 +265,7 @@ public:
             }
         }
         return 0.0f;
-        */
-	}
+    }
 
 	std::string toString() const override {
 		return tfm::format(
@@ -245,6 +281,7 @@ public:
 private:
     const int m_photonCount;
     const int m_kPhotons;
+    const int m_samplesFinalGathering;
 
     std::vector<Photon> m_photonMap;
     int m_currentPhotonCount;
