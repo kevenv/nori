@@ -146,7 +146,7 @@ public:
             return false; // photon dies, life is cruel for photons... :(
         }
         else {
-            p_.phi /= (Color3f(1.0f) - p_.phi); // photon absorption
+            p_.phi /= (Color3f(1.0f) - Color3f(rr)); // photon absorption
             return true; // photon survived! :D
         }
     }
