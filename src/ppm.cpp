@@ -315,9 +315,9 @@ public:
 	}
 
 private:
-    bool m_progressive;
+    const bool m_progressive;
     const int m_photonCount;
-    int m_kPhotons;
+    const int m_kPhotons;
     const int m_samplesFinalGathering;
 
     std::vector<Photon> m_photonMap;
