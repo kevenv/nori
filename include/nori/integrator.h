@@ -39,6 +39,8 @@ public:
     /// Perform an (optional) preprocess step
     virtual void preprocess(const Scene *scene) { }
 
+    virtual void beforeIteration(const Scene *scene, int iteration) { }
+
     /**
      * \brief Sample the incident radiance along a ray
      *

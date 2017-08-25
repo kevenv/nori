@@ -145,6 +145,103 @@ static void render(Scene *scene, const std::string &filename) {
     bitmap->save(outputName);
 }
 
+static void render_progressive_thread(Integrator* integrator, Scene* scene, const Camera* camera, Sampler* sampler, ImageBlock& result, ImageBlock& backBuffer, ImageBlock& acc) {
+    Vector2i size  = result.getSize();
+    int iterations = sampler->getSampleCount();
+
+    for(int i = 0; i < iterations; ++i) {
+        cout << "Rendering .. ";
+        cout.flush();
+        Timer timer;
+
+        integrator->beforeIteration(scene, i);
+
+        // render each pixels
+
+        /* Clear the block contents */
+        backBuffer.clear();
+
+        /* For each pixel and pixel sample sample */
+        for (int y=0; y<size.y(); ++y) {
+            for (int x=0; x<size.x(); ++x) {
+                Point2f pixelSample = Point2f(x,y) + sampler->next2D();
+                Point2f apertureSample = sampler->next2D();
+
+                /* Sample a ray from the camera */
+                Ray3f ray;
+                Color3f value = camera->sampleRay(ray, pixelSample, apertureSample);
+
+                /* Compute the incident radiance */
+                value *= integrator->Li(scene, sampler, ray);
+
+                /* Store in the image block */
+                backBuffer.put(pixelSample, value);
+            }
+        }
+
+        // show moving average
+        for (int y=0; y<size.y(); ++y) {
+            for (int x = 0; x < size.x(); ++x) {
+                acc.coeffRef(y,x) += backBuffer(y,x);
+                result.coeffRef(y,x) = acc.coeffRef(y,x) / iterations;
+            }
+        }
+
+        cout << "done. (took " << timer.elapsedString() << ")" << endl;
+    }
+}
+
+static void render_progressive(Scene *scene, const std::string &filename) {
+    const Camera *camera = scene->getCamera();
+    Vector2i outputSize = camera->getOutputSize();
+
+    /* Allocate memory for the entire output image and clear it */
+    ImageBlock result(outputSize, camera->getReconstructionFilter());
+    ImageBlock backBuffer(outputSize, camera->getReconstructionFilter());
+    ImageBlock acc(outputSize, camera->getReconstructionFilter());
+    acc.clear();
+
+    /* Create a window that visualizes the partially rendered result */
+    nanogui::init();
+    NoriScreen *screen = new NoriScreen(result);
+
+    /* Create a clone of the sampler for the current thread */
+    std::unique_ptr<Sampler> samplerPtr(scene->getSampler()->clone());
+    Sampler* sampler = samplerPtr.get();
+
+    /* Inform the sampler about the block to be rendered */
+    sampler->prepare(result);
+
+    Integrator *integrator = scene->getIntegrator();
+
+    std::thread render_thread(render_progressive_thread, integrator, scene, camera, sampler, std::ref(result), std::ref(backBuffer), std::ref(acc));
+
+    // ----------------------------------------------------------------
+
+    /* Enter the application main loop */
+    nanogui::mainloop();
+
+    /* Shut down the user interface */
+    render_thread.join();
+
+    delete screen;
+    nanogui::shutdown();
+
+    /* Now turn the rendered image block into
+       a properly normalized bitmap */
+    std::unique_ptr<Bitmap> bitmap(result.toBitmap());
+
+    /* Determine the filename of the output bitmap */
+    std::string outputName = filename;
+    size_t lastdot = outputName.find_last_of(".");
+    if (lastdot != std::string::npos)
+        outputName.erase(lastdot, std::string::npos);
+    outputName += ".exr";
+
+    /* Save using the OpenEXR format */
+    bitmap->save(outputName);
+}
+
 int main(int argc, char **argv) {
     if (argc != 2) {
         cerr << "Syntax: " << argv[0] << " <scene.xml>" << endl;
@@ -163,8 +260,19 @@ int main(int argc, char **argv) {
             std::unique_ptr<NoriObject> root(loadFromXML(argv[1]));
 
             /* When the XML root object is a scene, start rendering it .. */
-            if (root->getClassType() == NoriObject::EScene)
-                render(static_cast<Scene *>(root.get()), argv[1]);
+            if (root->getClassType() == NoriObject::EScene) {
+                Scene* scene = static_cast<Scene *>(root.get());
+
+                /*
+                //todo: hack to switch from a block renderer to a progressive one
+                PPM* ppm = dynamic_cast<PPM*>(scene->getIntegrator());
+                if(ppm) {
+                    render_progressive(scene, argv[1]);
+                }
+                else {*/
+                    render(scene, argv[1]);
+                //}
+            }
         } else if (path.extension() == "exr") {
             /* Alternatively, provide a basic OpenEXR image viewer */
             Bitmap bitmap(argv[1]);
