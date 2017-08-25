@@ -28,13 +28,14 @@ struct PhotonDist {
 class PPM : public Integrator {
 public:
 	PPM(const PropertyList &props):
-        m_progressive(static_cast<bool>(props.getInteger("progressive",1))),
         m_photonCount(props.getInteger("photonCount", 100)),
         m_kPhotons(props.getInteger("kPhotons", 10)),
         m_radius2(props.getFloat("radius2", 10.0f)),
         m_samplesFinalGathering(props.getInteger("samplesFinalGathernig",10)),
         m_currentPhotonCount(0)
 	{
+        m_progressive = static_cast<bool>(props.getInteger("progressive",1));
+
         m_photonMap.resize(m_photonCount);
         m_KDTree.reserve(m_photonCount);
 	}
@@ -315,7 +316,6 @@ public:
 	}
 
 private:
-    const bool m_progressive;
     const int m_photonCount;
     const int m_kPhotons;
     const int m_samplesFinalGathering;

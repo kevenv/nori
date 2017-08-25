@@ -40,6 +40,8 @@ public:
     virtual void preprocess(const Scene *scene) { }
 
     virtual void beforeIteration(const Scene *scene, int iteration) { }
+    // if progressive, use progressive renderer and call beforeIteration()
+    bool isProgressive() const { return m_progressive; }
 
     /**
      * \brief Sample the incident radiance along a ray
@@ -60,6 +62,9 @@ public:
      * provided by this instance
      * */
     EClassType getClassType() const { return EIntegrator; }
+
+protected:
+    bool m_progressive {false};
 };
 
 NORI_NAMESPACE_END

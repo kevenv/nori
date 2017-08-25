@@ -262,16 +262,13 @@ int main(int argc, char **argv) {
             /* When the XML root object is a scene, start rendering it .. */
             if (root->getClassType() == NoriObject::EScene) {
                 Scene* scene = static_cast<Scene *>(root.get());
-
-                /*
-                //todo: hack to switch from a block renderer to a progressive one
-                PPM* ppm = dynamic_cast<PPM*>(scene->getIntegrator());
-                if(ppm) {
+                Integrator* integrator = scene->getIntegrator();
+                if(integrator->isProgressive()) {
                     render_progressive(scene, argv[1]);
                 }
-                else {*/
+                else {
                     render(scene, argv[1]);
-                //}
+                }
             }
         } else if (path.extension() == "exr") {
             /* Alternatively, provide a basic OpenEXR image viewer */
