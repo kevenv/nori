@@ -6,8 +6,6 @@
 #include <nori/emitter.h>
 #include <nori/kdtree.h>
 
-//#define USE_NAIVE_KNN
-
 NORI_NAMESPACE_BEGIN
 
 struct Photon {
@@ -16,26 +14,24 @@ struct Photon {
     Color3f phi;
 };
 
-struct PhotonDist {
-    float dist;
-    int idx;
-
-    bool operator<(const PhotonDist& pDist) const {
-        return dist < pDist.dist;
-    }
-};
-
 class PPM : public Integrator {
 public:
 	PPM(const PropertyList &props):
         m_photonCount(props.getInteger("photonCount", 100)),
         m_kPhotons(props.getInteger("kPhotons", 10)),
         m_radius2(props.getFloat("radius2", 10.0f)),
-        m_samplesFinalGathering(props.getInteger("samplesFinalGathering",10)),
+        m_samplesFinalGathering(props.getInteger("samplesFinalGathering", 10)),
+        m_knnMethodStr(props.getString("knnMethod", "radius")),
         m_currentPhotonCount(0),
         m_emittedPhotonCount(0)
 	{
         m_progressive = static_cast<bool>(props.getInteger("progressive",1));
+
+        if(m_knnMethodStr == "radius" || m_progressive) {
+            m_knnMethod = KNN_METHOD_RADIUS;
+        } else if(m_knnMethodStr == "photons") {
+            m_knnMethod = KNN_METHOD_PHOTONS;
+        }
 
         m_photonMap.resize(m_photonCount);
         m_KDTree.reserve(m_photonCount);
@@ -223,60 +219,34 @@ public:
 	}
 
     Color3f computeLrFromDensityEstimation(const Ray3f& ray, const Intersection& its) const {
-        if(m_progressive) {
-            // get k nearest photons
-            std::vector<unsigned int> results;
-            m_KDTree.search(its.p, std::sqrt(m_radius2), results);
-            int kPhotons = results.size();
-            if(kPhotons <= 0) return 0.0f;
-
-            std::sort(results.begin(), results.end()); //ascending order
-
-            std::vector<Photon> nearestPhotons(kPhotons);
-            for(int i = 0; i < kPhotons; ++i) {
-                unsigned int idxKD = results[i];
-                PhotonMapIdx idx = m_KDTree[idxKD].getData();
-                nearestPhotons[i] = m_photonMap[idx];
+        std::vector<Photon> nearestPhotons;
+        if(m_knnMethod == KNN_METHOD_RADIUS) {
+            float radius2 = m_radius2;
+            if(nnSearch(its.p, m_photonCount, radius2, nearestPhotons)) {
+                return densityEstimation(nearestPhotons, nearestPhotons.size(), radius2, ray, its);
             }
-
-            return densityEstimation(nearestPhotons, nearestPhotons.size(), m_radius2, ray, its);
         }
-        else {
-            // get k nearest photons
-#ifdef USE_NAIVE_KNN
-            std::vector<PhotonDist> dist(m_photonCount);
-            for(int i = 0; i < m_photonCount; ++i) {
-                Vector3f d = its.p - m_photonMap[i].x;
-                dist[i].dist = d.norm();
-                dist[i].idx = i;
+        else if(m_knnMethod == KNN_METHOD_PHOTONS) {
+            float radius2 = std::numeric_limits<float>::infinity(); // will be changed by nnSearch()
+            if(nnSearch(its.p, m_kPhotons, radius2, nearestPhotons)) {
+                return densityEstimation(nearestPhotons, nearestPhotons.size()-1 /* ignore the k-th photon */, radius2, ray, its);
             }
-
-            std::sort(dist.begin(), dist.end()); //ascending order
-
-            std::vector<Photon> nearestPhotons(m_kPhotons);
-            for(int i = 0; i < m_kPhotons; ++i) {
-                int idx = dist[i].idx;
-                nearestPhotons[i] = m_photonMap[idx];
-            }
-            float radius2 = dist[m_kPhotons-1].dist; radius2*=radius2; // distance to the k-th photon
-#else
-            std::vector<PointKDTree<PhotonKDTreeNode>::SearchResult> results(m_kPhotons+1); // + 1 extra for nnSearch impl
-            int kPhotons = m_KDTree.nnSearch(its.p, m_kPhotons, &results[0]);
-            if(kPhotons <= 0) return 0.0f;
-
-            std::sort(results.begin(), results.end()-1); //ascending order, (-1) we don't want to sort the last element as its a temp space
-
-            std::vector<Photon> nearestPhotons(kPhotons);
-            for(int i = 0; i < kPhotons; ++i) {
-                unsigned int idxKD = results[i].index;
-                PhotonMapIdx idx = m_KDTree[idxKD].getData();
-                nearestPhotons[i] = m_photonMap[idx];
-            }
-            float radius2 = results[kPhotons-1].distSquared; // distance to the k-th photon
-
-            return densityEstimation(nearestPhotons, nearestPhotons.size()-1 /* ignore the k-th photon */, radius2, ray, its);
-#endif
         }
+        return 0.0f;
+    }
+
+    bool nnSearch(const Point3f& p, int kPhotonsMax, float& radius2, std::vector<Photon>& nearestPhotons) const {
+        std::vector<PointKDTree<PhotonKDTreeNode>::SearchResult> results(kPhotonsMax+1); // + 1 extra for nnSearch impl
+        int kPhotons = m_KDTree.nnSearch(p, radius2, kPhotonsMax, &results[0]); // radius2 will be changed by nnSearch()
+        if(kPhotons <= 0) return false;
+
+        nearestPhotons.resize(kPhotons);
+        for(int i = 0; i < kPhotons; ++i) {
+            unsigned int idxKD = results[i].index;
+            PhotonMapIdx idx = m_KDTree[idxKD].getData();
+            nearestPhotons[i] = m_photonMap[idx];
+        }
+        return true;
     }
 
     Color3f densityEstimation(const std::vector<Photon>& nearestPhotons, int k, float radius2,
@@ -284,7 +254,7 @@ public:
         // compute radiance estimate from k nearest photons
         Color3f Lr(0.0f);
         for(int i = 0; i < k; ++i) {
-            BSDFQueryRecord bRec(its.toLocal(m_photonMap[i].w), its.toLocal(-ray.d), ESolidAngle);
+            BSDFQueryRecord bRec(its.toLocal(-m_photonMap[i].w), its.toLocal(-ray.d), ESolidAngle);
             Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
             Lr += brdfValue * nearestPhotons[i].phi / (M_PI*radius2);
         }
@@ -316,18 +286,30 @@ public:
 			"PPM[\n"
             "photonCount = %d\n"
             "kPhotons = %d\n"
+            "radius2 = %d\n"
+            "samplesFG = %d\n"
+            "knnMethod = %s\n"
 			"]",
             m_photonCount,
-            m_kPhotons
+            m_kPhotons,
+            m_radius2,
+            m_samplesFinalGathering,
+            m_knnMethodStr
 		);
 	}
 
 private:
+    enum KNN_METHOD {
+        KNN_METHOD_RADIUS,
+        KNN_METHOD_PHOTONS
+    };
+
     const int m_photonCount;
     const int m_kPhotons;
+    float m_radius2;
     const int m_samplesFinalGathering;
-
-    int m_emittedPhotonCount;
+    const std::string m_knnMethodStr;
+    KNN_METHOD m_knnMethod;
 
     std::vector<Photon> m_photonMap;
     int m_currentPhotonCount;
@@ -335,7 +317,7 @@ private:
     typedef GenericKDTreeNode<Vector3f, PhotonMapIdx> PhotonKDTreeNode;
     PointKDTree<PhotonKDTreeNode> m_KDTree;
 
-    float m_radius2;
+    int m_emittedPhotonCount;
 };
 
 NORI_REGISTER_CLASS(PPM, "ppm");
