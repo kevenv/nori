@@ -150,7 +150,7 @@ static void render_progressive_thread(Integrator* integrator, Scene* scene, cons
     int iterations = sampler->getSampleCount();
 
     for(int i = 0; i < iterations; ++i) {
-        cout << "Rendering .. ";
+        cout << "Rendering .. " << i << " ";
         cout.flush();
         Timer timer;
 

@@ -31,13 +31,17 @@ public:
         m_photonCount(props.getInteger("photonCount", 100)),
         m_kPhotons(props.getInteger("kPhotons", 10)),
         m_radius2(props.getFloat("radius2", 10.0f)),
-        m_samplesFinalGathering(props.getInteger("samplesFinalGathernig",10)),
+        m_samplesFinalGathering(props.getInteger("samplesFinalGathering",10)),
         m_currentPhotonCount(0)
 	{
         m_progressive = static_cast<bool>(props.getInteger("progressive",1));
 
         m_photonMap.resize(m_photonCount);
         m_KDTree.reserve(m_photonCount);
+
+        if(m_kPhotons > m_photonCount) {
+            throw NoriException("PPM: kPhotons > photonCount...");
+        }
 	}
 
     void preprocess(const Scene *scene) override {
@@ -80,7 +84,7 @@ public:
     }
 
     bool haveEnoughPhotons() {
-        return m_currentPhotonCount >= m_photonCount-1;
+        return m_currentPhotonCount >= m_photonCount;
     }
 
     const Emitter& chooseRandomEmitter(const Scene* scene) {
@@ -97,8 +101,8 @@ public:
         float pdfX = 1.0f / em.getShape()->getArea();
 
         // sample direction
-        Vector3f wLoc = Warp::squareToUniformSphere(sampler->next2D()); //todo: sphere for sphere light, cosine for rect light
-        float pdfW = Warp::squareToUniformSpherePdf(wLoc);
+        Vector3f wLoc = Warp::squareToUniformHemisphere(sampler->next2D()); //todo: hemisphere for hemisphere light, cosine for rect light
+        float pdfW = Warp::squareToUniformHemispherePdf(wLoc);
         Frame N(n);
         p.w = N.toWorld(wLoc);
         p.w.normalize();
@@ -111,46 +115,50 @@ public:
         return p;
     }
 
-    void tracePhoton(const Photon& p, const Scene* scene, Sampler* sampler) {
+    void tracePhoton(Photon& p, const Scene* scene, Sampler* sampler) {
         float maxt = scene->getBoundingBox().getExtents().norm();
 
         Intersection its;
         Ray3f ray(p.x, p.w, Epsilon, maxt);
-        if(scene->rayIntersect(ray, its)) {
-            //store photon if diffuse
-            if(!its.shape->isEmitter()) {
-                m_photonMap[m_currentPhotonCount].x = its.p;
-                m_photonMap[m_currentPhotonCount].w = p.w;
-                m_photonMap[m_currentPhotonCount].phi = p.phi;
+        if(!scene->rayIntersect(ray, its)) {
+            return;
+        }
 
-                if (haveEnoughPhotons()) {
-                    return; // no more photons todo: will that break things?
-                }
-                m_currentPhotonCount++;
-            }
+        //store photon if diffuse
+        if(its.shape->isEmitter()) {
+            return;
+        }
 
-            // scatter photon
-            BSDFQueryRecord bRec(its.toLocal(p.w), Vector3f(0.0f), ESolidAngle);
-            Color3f brdfValue = its.shape->getBSDF()->sample(bRec, sampler->next2D());
-            float pdfBRDF = its.shape->getBSDF()->pdf(bRec);
+        m_photonMap[m_currentPhotonCount].x = its.p;
+        m_photonMap[m_currentPhotonCount].w = p.w;
+        m_photonMap[m_currentPhotonCount].phi = p.phi;
+        if (haveEnoughPhotons()) {
+            return; // no more photons todo: will that break things?
+        }
+        m_currentPhotonCount++;
 
-            // compute new photon power
-            Photon p_;
-            p_.x = its.p;
-            p_.w = its.toWorld(bRec.wo);
+        // scatter photon
+        BSDFQueryRecord bRec(its.toLocal(-p.w), Vector3f(0.0f), ESolidAngle);
+        Color3f brdfValue = its.shape->getBSDF()->sample(bRec, sampler->next2D());
+        float pdfBRDF = its.shape->getBSDF()->pdf(bRec);
 
-            Normal3f n(its.shFrame.n);
-            float cosTheta = std::max(0.0f,p_.w.dot(n));
-            p_.phi = p.phi * cosTheta * brdfValue / pdfBRDF;
+        // compute new photon power
+        Photon p_;
+        p_.x = its.p;
+        p_.w = its.toWorld(bRec.wo);
 
-            // continue scatter photon
-            if(survivedRR(p, p_, sampler->next1D())) {
-                tracePhoton(p_, scene, sampler);
-            }
+        Normal3f n(its.shFrame.n);
+        float cosTheta = std::max(0.0f,p_.w.dot(n));
+        p_.phi = p.phi * cosTheta * brdfValue / pdfBRDF;
+
+        // continue scatter photon
+        if(survivedRR(p, p_, sampler->next1D())) {
+            tracePhoton(p_, scene, sampler);
         }
     }
 
     bool survivedRR(const Photon& p, Photon& p_, float rand) {
+
         float phi = getLuminance(p.phi);
         float phi_ = getLuminance(p_.phi);
 
@@ -186,8 +194,8 @@ public:
 
             Color3f Lr(0.0f);
             for (int i = 0; i < m_samplesFinalGathering; ++i) {
-                Vector3f d = Warp::squareToUniformHemisphere(sampler->next2D());
-                float pdf = Warp::squareToUniformHemispherePdf(d);
+                Vector3f d = Warp::squareToCosineHemisphere(sampler->next2D());
+                float pdf = Warp::squareToCosineHemispherePdf(d);
                 d = its.toWorld(d); // transform to world space so it aligns with the its
                 d.normalize();
                 Ray3f gatherRay(its.p, d, Epsilon, maxt);
@@ -253,17 +261,18 @@ public:
             float radius2 = dist[m_kPhotons-1].dist; radius2*=radius2; // distance to the k-th photon
 #else
             std::vector<PointKDTree<PhotonKDTreeNode>::SearchResult> results(m_kPhotons+1); // + 1 extra for nnSearch impl
-            m_KDTree.nnSearch(its.p, m_kPhotons, &results[0]);
+            int kPhotons = m_KDTree.nnSearch(its.p, m_kPhotons, &results[0]);
+            if(kPhotons <= 0) return 0.0f;
 
-            std::sort(results.begin(), results.end()); //ascending order
+            std::sort(results.begin(), results.end()-1); //ascending order, (-1) we don't want to sort the last element as its a temp space
 
-            std::vector<Photon> nearestPhotons(m_kPhotons);
-            for(int i = 0; i < m_kPhotons; ++i) {
+            std::vector<Photon> nearestPhotons(kPhotons);
+            for(int i = 0; i < kPhotons; ++i) {
                 unsigned int idxKD = results[i].index;
                 PhotonMapIdx idx = m_KDTree[idxKD].getData();
                 nearestPhotons[i] = m_photonMap[idx];
             }
-            float radius2 = results[m_kPhotons-1].distSquared; // distance to the k-th photon
+            float radius2 = results[kPhotons-1].distSquared; // distance to the k-th photon
 
             return densityEstimation(nearestPhotons, nearestPhotons.size()-1 /* ignore the k-th photon */, radius2, ray, its);
 #endif
@@ -282,7 +291,7 @@ public:
         return Lr;
     }
 
-    Color3f photonMapViewer(const Ray3f& ray, const Intersection& its) {
+    Color3f photonMapViewer(const Ray3f& ray, const Intersection& its) const {
         for(int i = 0; i < m_photonCount; ++i) {
             // ray-point intersection
             Point3f P = m_photonMap[i].x;
@@ -296,8 +305,6 @@ public:
             //float dot = PO.dot(TO);
             //bool intersects = std::abs(dot*dot - PO.squaredNorm()*TO.squaredNorm()) <= 1e-6f;
             if(intersects) {
-                BSDFQueryRecord bRec(its.toLocal(m_photonMap[i].w), its.toLocal(-ray.d), ESolidAngle);
-                Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
                 return Color3f(1.0f,0.0f,0.0f);
             }
         }
