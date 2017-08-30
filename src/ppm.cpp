@@ -32,7 +32,8 @@ public:
         m_kPhotons(props.getInteger("kPhotons", 10)),
         m_radius2(props.getFloat("radius2", 10.0f)),
         m_samplesFinalGathering(props.getInteger("samplesFinalGathering",10)),
-        m_currentPhotonCount(0)
+        m_currentPhotonCount(0),
+        m_emittedPhotonCount(0)
 	{
         m_progressive = static_cast<bool>(props.getInteger("progressive",1));
 
@@ -61,6 +62,7 @@ public:
     void generatePhotonMap(const Scene* scene) {
         m_KDTree.clear();
         m_currentPhotonCount = 0;
+        m_emittedPhotonCount = 0;
 
         std::unique_ptr<Sampler> samplerPtr = scene->getSampler()->clone();
         Sampler* sampler = samplerPtr.get();
@@ -68,11 +70,11 @@ public:
         while(!haveEnoughPhotons()) {
             const Emitter& em = chooseRandomEmitter(scene);
             Photon p = emitPhotonFromEmitter(em, sampler);
-            tracePhoton(p, scene, sampler);
+            tracePhoton(p, scene, sampler, 0);
         }
 
         for(int i = 0; i < m_photonCount; ++i) {
-            m_photonMap[i].phi /= m_photonCount;
+            m_photonMap[i].phi /= m_emittedPhotonCount;
         }
 
         // build KD-Tree
@@ -112,10 +114,12 @@ public:
         float cosTheta = std::max(0.0f,p.w.dot(n));
         p.phi = Le * cosTheta / (pdfX*pdfW);
 
+        m_emittedPhotonCount++;
+
         return p;
     }
 
-    void tracePhoton(Photon& p, const Scene* scene, Sampler* sampler) {
+    void tracePhoton(Photon& p, const Scene* scene, Sampler* sampler, int bounds = 0) {
         float maxt = scene->getBoundingBox().getExtents().norm();
 
         Intersection its;
@@ -139,17 +143,19 @@ public:
 
         // scatter photon
         BSDFQueryRecord bRec(its.toLocal(-p.w), Vector3f(0.0f), ESolidAngle);
-        Color3f brdfValue = its.shape->getBSDF()->sample(bRec, sampler->next2D());
-        float pdfBRDF = its.shape->getBSDF()->pdf(bRec);
+        Color3f brdfValue = its.shape->getBSDF()->sample(bRec, sampler->next2D()); // = fr * cos / pdf
 
         // compute new photon power
         Photon p_;
         p_.x = its.p;
         p_.w = its.toWorld(bRec.wo);
+        p_.phi = p.phi * brdfValue;
 
-        Normal3f n(its.shFrame.n);
-        float cosTheta = std::max(0.0f,p_.w.dot(n));
-        p_.phi = p.phi * cosTheta * brdfValue / pdfBRDF;
+        /*
+        if(bounds < 12 && !p_.phi.isBlack()) {
+            tracePhoton(p_, scene, sampler, ++bounds);
+        }
+        */
 
         // continue scatter photon
         if(survivedRR(p, p_, sampler->next1D())) {
@@ -158,9 +164,8 @@ public:
     }
 
     bool survivedRR(const Photon& p, Photon& p_, float rand) {
-
-        float phi = getLuminance(p.phi);
-        float phi_ = getLuminance(p_.phi);
+        float phi = p.phi.getLuminance();
+        float phi_ = p_.phi.getLuminance();
 
         float rr = 1 - std::min(1.0f, phi_ / phi);
         if(rand < rr) {
@@ -170,11 +175,6 @@ public:
             p_.phi /= (Color3f(1.0f) - Color3f(rr)); // photon absorption
             return true; // photon survived! :D
         }
-    }
-
-    /// Return the luminance (assuming the color value is expressed in linear sRGB)
-    inline float getLuminance(Color3f c) const {
-        return c[0] * 0.212671f + c[1] * 0.715160f + c[2] * 0.072169f;
     }
 
 	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const override {
@@ -326,6 +326,8 @@ private:
     const int m_photonCount;
     const int m_kPhotons;
     const int m_samplesFinalGathering;
+
+    int m_emittedPhotonCount;
 
     std::vector<Photon> m_photonMap;
     int m_currentPhotonCount;

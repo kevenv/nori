@@ -220,6 +220,11 @@ float Color3f::getLuminance() const {
     return coeff(0) * 0.212671f + coeff(1) * 0.715160f + coeff(2) * 0.072169f;
 }
 
+bool Color3f::isBlack() const {
+    const float eps = 1e-9f;
+    return (coeff(0) < eps) && (coeff(1) < eps) && (coeff(2) < eps);
+}
+
 Transform::Transform(const Eigen::Matrix4f &trafo)
     : m_transform(trafo), m_inverse(trafo.inverse()) { }
 

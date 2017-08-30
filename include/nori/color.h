@@ -74,6 +74,8 @@ public:
     /// Return the associated luminance
     float getLuminance() const;
 
+    bool isBlack() const;
+
     /// Return a human-readable string summary
     std::string toString() const {
         return tfm::format("[%f, %f, %f]", coeff(0), coeff(1), coeff(2));
