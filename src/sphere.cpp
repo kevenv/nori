@@ -137,9 +137,7 @@ public:
 	}
 
 	virtual void computeIntersectionInfo(uint32_t index, const Ray3f &ray, Intersection & its) const override {
-		float u, v, t;
-		rayIntersect(index, ray, u, v, t);
-		its.p = ray(t);
+		its.p = ray(its.t);
 
 		Vector3f l = its.p - m_center;
 		Vector3f n = l.normalized();

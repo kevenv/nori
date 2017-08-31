@@ -74,9 +74,7 @@ public:
 	}
 
 	virtual void computeIntersectionInfo(uint32_t index, const Ray3f &ray, Intersection & its) const override {
-		float u, v, t;
-		rayIntersect(index, ray, u, v, t);
-		its.p = ray(t) - m_center;
+		its.p = ray(its.t) - m_center;
 
 		its.geoFrame = Frame(m_normal);
 		its.shFrame = Frame(m_normal);
