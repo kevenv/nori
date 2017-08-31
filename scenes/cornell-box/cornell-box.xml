@@ -1,6 +1,6 @@
 <scene>
 	<sampler type="independent">
-		<integer name="sampleCount" value="128"/>
+		<integer name="sampleCount" value="1"/>
 	</sampler>
 
 	<integrator type="path_tracer">
@@ -16,6 +16,7 @@
 		<integer name="sampleCount" value="512"/>
 
 		<!-- PPM -->
+		<integer name="iterations" value="500"/> <!-- progressive only -->
 		<integer name="progressive" value="0"/>
 		<string name="knnMethod" value="photons"/>
 
@@ -25,7 +26,7 @@
 		<integer name="kPhotons" value="500"/>
 	</integrator>
 	
-	<!--
+	
 	<shape type="sphere">
 		<point name="center" value="0,0,1.9"/>
         <float name="radius" value="0.05"/>
@@ -33,8 +34,8 @@
 			<color name="radiance" value="300,300,300"/>
 		</emitter>
 	</shape>
-	-->
-
+	
+	<!--
 	<shape type="plane">
 		<point name="center" value="0,0,2"/>
 		<float name="width" value="1"/>
@@ -43,6 +44,8 @@
 			<color name="radiance" value="40,40,40"/>
 		</emitter>
 	</shape>
+	-->
+
 
 	<!-- Cornell box -->
 	<shape type="obj">

@@ -147,7 +147,7 @@ static void render(Scene *scene, const std::string &filename) {
 
 static void render_progressive_thread(Integrator* integrator, Scene* scene, const Camera* camera, Sampler* sampler, ImageBlock& result, ImageBlock& backBuffer, ImageBlock& acc) {
     Vector2i size  = result.getSize();
-    int iterations = sampler->getSampleCount();
+    int iterations = integrator->getIterations();
 
     for(int i = 0; i < iterations; ++i) {
         cout << "Rendering .. " << i << " ";

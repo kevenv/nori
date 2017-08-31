@@ -27,6 +27,7 @@ public:
         m_emittedPhotonCount(0)
 	{
         m_progressive = static_cast<bool>(props.getInteger("progressive",1));
+		m_iterations = props.getInteger("iterations", 1);
 
         if(m_knnMethodStr == "radius" || m_progressive) {
             m_knnMethod = KNN_METHOD_RADIUS;
