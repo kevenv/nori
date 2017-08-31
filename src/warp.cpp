@@ -65,7 +65,7 @@ Vector3f Warp::squareToUniformHemisphere(const Point2f &sample) {
 }
 
 float Warp::squareToUniformHemispherePdf(const Vector3f &v) {
-	return v.z() > 0.0f ? INV_TWOPI : 0.0f;
+	return v.z() >= 0.0f ? INV_TWOPI : 0.0f;
 }
 
 Vector3f Warp::squareToCosineHemisphere(const Point2f &sample) {
@@ -75,7 +75,7 @@ Vector3f Warp::squareToCosineHemisphere(const Point2f &sample) {
 }
 
 float Warp::squareToCosineHemispherePdf(const Vector3f &v) {
-	return v.z() > 0.0f ? v.z() * INV_PI : 0.0f;
+	return v.z() >= 0.0f ? v.z() * INV_PI : 0.0f;
 }
 
 Vector3f Warp::squareToUniformCone(const Point2f &sample, float cosThetaMax, float &sinTheta, float &cosTheta, float &phi) {
