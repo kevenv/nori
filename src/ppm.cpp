@@ -52,8 +52,8 @@ public:
     }
 
     void updateRadius(int iteration) {
-        float alpha = 2.0f/3.0f;
-        m_radius2 *= ((float)iteration+alpha)/(iteration+1);
+        float alpha = iteration == 0 ? 1.0f : 2.0f/3.0f;
+        m_radius2 *= ((float)iteration + alpha) / (iteration + 1);
     }
 
     void generatePhotonMap(const Scene* scene) {
