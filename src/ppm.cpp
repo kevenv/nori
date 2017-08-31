@@ -117,6 +117,10 @@ public:
     }
 
     void tracePhoton(Photon& p, const Scene* scene, Sampler* sampler, int bounds = 0) {
+        if (haveEnoughPhotons()) {
+            return; // no more photons todo: will that break things?
+        }
+
         float maxt = scene->getBoundingBox().getExtents().norm();
 
         Intersection its;
@@ -133,9 +137,6 @@ public:
         m_photonMap[m_currentPhotonCount].x = its.p;
         m_photonMap[m_currentPhotonCount].w = p.w;
         m_photonMap[m_currentPhotonCount].phi = p.phi;
-        if (haveEnoughPhotons()) {
-            return; // no more photons todo: will that break things?
-        }
         m_currentPhotonCount++;
 
         // scatter photon
