@@ -20,9 +20,9 @@
 		<string name="knnMethod" value="photons"/>
 
 		<integer name="samplesFinalGathering" value="0"/>
-		<integer name="photonCount" value="100000"/>
-		<float name="radius2" value="0.05"/>
-		<integer name="kPhotons" value="50"/>
+		<integer name="photonCount" value="5000000"/>
+		<float name="radius2" value="0.0008"/>
+		<integer name="kPhotons" value="500"/>
 	</integrator>
 	
 	<!--

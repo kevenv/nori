@@ -22,6 +22,7 @@ public:
         m_radius2(props.getFloat("radius2", 10.0f)),
         m_samplesFinalGathering(props.getInteger("samplesFinalGathering", 10)),
         m_knnMethodStr(props.getString("knnMethod", "radius")),
+		m_knnMethod(KNN_METHOD_RADIUS),
         m_currentPhotonCount(0),
         m_emittedPhotonCount(0)
 	{
