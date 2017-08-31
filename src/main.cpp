@@ -183,7 +183,7 @@ static void render_progressive_thread(Integrator* integrator, Scene* scene, cons
         for (int y=0; y<size.y(); ++y) {
             for (int x = 0; x < size.x(); ++x) {
                 acc.coeffRef(y,x) += backBuffer(y,x);
-                result.coeffRef(y,x) = acc.coeffRef(y,x) / iterations;
+                result.coeffRef(y,x) = acc.coeffRef(y,x) / (i+1);
             }
         }
 
