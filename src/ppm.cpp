@@ -196,30 +196,31 @@ public:
 
         // DI
         Color3f Ld(0.0f);
-        int m_sampleCount = 50;
-        for (int i = 0; i < m_sampleCount; ++i) {
-            for (const Emitter* emitter : scene->getEmitters()) {
-                const Shape* lightShape = emitter->getShape();
-                if (lightShape) { // is area light?
-                    Normal3f yN;
-                    float pWi;
-                    Vector3f d = emitter->sampleSolidAngle(sampler, its.p, yN, pWi);
+        if (m_samplesDI > 0) {
+            for (int i = 0; i < m_samplesDI; ++i) {
+                for (const Emitter* emitter : scene->getEmitters()) {
+                    const Shape* lightShape = emitter->getShape();
+                    if (lightShape) { // is area light?
+                        Normal3f yN;
+                        float pWi;
+                        Vector3f d = emitter->sampleSolidAngle(sampler, its.p, yN, pWi);
 
-                    Ray3f lightRay(its.p, d, Epsilon, maxt);
-                    Intersection itsLight;
-                    bool intersects = scene->rayIntersect(lightRay, itsLight);
-                    if (intersects && itsLight.shape->isEmitter()) {
-                        Color3f Le = itsLight.shape->getEmitter()->eval();
-                        float cosTheta = std::max(0.0f, d.dot(n));
-                        nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
-                        nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
+                        Ray3f lightRay(its.p, d, Epsilon, maxt);
+                        Intersection itsLight;
+                        bool intersects = scene->rayIntersect(lightRay, itsLight);
+                        if (intersects && itsLight.shape->isEmitter()) {
+                            Color3f Le = itsLight.shape->getEmitter()->eval();
+                            float cosTheta = std::max(0.0f, d.dot(n));
+                            nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
+                            nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
 
-                        Ld += brdfValue * Le * cosTheta / pWi;
+                            Ld += brdfValue * Le * cosTheta / pWi;
+                        }
                     }
                 }
             }
+            Ld *= 1.0f / m_samplesDI;
         }
-        Ld *= 1.0f / m_sampleCount;
 
         // GI using PM w final gathering (FG)
         Color3f Li(0.0f);
