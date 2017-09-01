@@ -47,66 +47,70 @@ float Warp::squareToUniformDiskPdf(const Point2f &p) {
 }
 
 Vector3f Warp::squareToUniformSphere(const Point2f &sample) {
-	float z = 1.0f - 2.0f * sample.x();
-	float r = std::sqrt(std::max(0.0f, 1.0f - z*z));
-	float phi = 2.0f * M_PI * sample.y();
-	return Vector3f(r * std::cos(phi), r * std::sin(phi), z);
+    float z = 1.0f - 2.0f * sample.x();
+    float r = std::sqrt(std::max(0.0f, 1.0f - z*z));
+    float phi = 2.0f * M_PI * sample.y();
+    return Vector3f(r * std::cos(phi), r * std::sin(phi), z);
 }
 
 float Warp::squareToUniformSpherePdf(const Vector3f &v) {
-	return INV_FOURPI;
+    return INV_FOURPI;
 }
 
 Vector3f Warp::squareToUniformHemisphere(const Point2f &sample) {
-	float z = sample.x();
-	float r = std::sqrt(std::max(0.0f, 1.0f - z * z));
-	float phi = 2 * M_PI * sample.y();
-	return Vector3f(r * std::cos(phi), r * std::sin(phi), z);
+    float z = sample.x();
+    float r = std::sqrt(std::max(0.0f, 1.0f - z * z));
+    float phi = 2 * M_PI * sample.y();
+    return Vector3f(r * std::cos(phi), r * std::sin(phi), z);
 }
 
 float Warp::squareToUniformHemispherePdf(const Vector3f &v) {
-	return v.z() >= 0.0f ? INV_TWOPI : 0.0f;
+    return v.z() >= 0.0f ? INV_TWOPI : 0.0f;
 }
 
 Vector3f Warp::squareToCosineHemisphere(const Point2f &sample) {
-	Point2f d = concentricSampleDisk(sample);
-	float z = std::sqrt(std::max(0.0f, 1 - d.x()*d.x() - d.y()*d.y()));
-	return Vector3f(d.x(), d.y(), z);
+    Point2f d = concentricSampleDisk(sample);
+    float z = std::sqrt(std::max(0.0f, 1 - d.x()*d.x() - d.y()*d.y()));
+    // guard against numerical imprecisions (it actually happens...)
+    if (z == 0.0f) {
+        z = 1e-10f;
+    }
+    return Vector3f(d.x(), d.y(), z);
 }
 
 float Warp::squareToCosineHemispherePdf(const Vector3f &v) {
-	return v.z() >= 0.0f ? v.z() * INV_PI : 0.0f;
+    return v.z() >= 0.0f ? v.z() * INV_PI : 0.0f;
 }
 
 Vector3f Warp::squareToUniformCone(const Point2f &sample, float cosThetaMax, float &sinTheta, float &cosTheta, float &phi) {
-	cosTheta = (1.0f - sample.x()) + sample.x() * cosThetaMax;
-	sinTheta = std::sqrt(std::max(0.0f, 1.0f - cosTheta * cosTheta));
-	phi = sample.y() * 2 * M_PI;
-	return Vector3f(std::cos(phi) * sinTheta, std::sin(phi) * sinTheta, cosTheta);
+    cosTheta = (1.0f - sample.x()) + sample.x() * cosThetaMax;
+    sinTheta = std::sqrt(std::max(0.0f, 1.0f - cosTheta * cosTheta));
+    phi = sample.y() * 2 * M_PI;
+    return Vector3f(std::cos(phi) * sinTheta, std::sin(phi) * sinTheta, cosTheta);
 }
 
 float Warp::squareToUniformConePdf(float cosThetaMax) {
-	return 1.0f / ( 2*M_PI * (1.0f - cosThetaMax) );
+    return 1.0f / ( 2*M_PI * (1.0f - cosThetaMax) );
 }
 
 Point2f Warp::concentricSampleDisk(const Point2f &sample) {
-	// map uniform random numbers to [-1,1]^2
-	Point2f uOffset = 2.0f * sample - Vector2f(1, 1);
-	// handle degeneracy at the origin
-	if (uOffset.x() == 0.0f && uOffset.y() == 0.0f) {
-		return Point2f(0.0f, 0.0f);
-	}
-	// apply concentric mapping to point
-	float theta, r;
-	if (std::abs(uOffset.x()) > std::abs(uOffset.y())) {
-		r = uOffset.x();
-		theta = PI_OVER_FOUR * (uOffset.y() / uOffset.x());
-	}
-	else {
-		r = uOffset.y();
-		theta = PI_OVER_TWO - PI_OVER_FOUR * (uOffset.x() / uOffset.y());
-	}
-	return r * Point2f(std::cos(theta), std::sin(theta));
+    // map uniform random numbers to [-1,1]^2
+    Point2f uOffset = 2.0f * sample - Vector2f(1, 1);
+    // handle degeneracy at the origin
+    if (uOffset.x() == 0.0f && uOffset.y() == 0.0f) {
+        return Point2f(0.0f, 0.0f);
+    }
+    // apply concentric mapping to point
+    float theta, r;
+    if (std::abs(uOffset.x()) > std::abs(uOffset.y())) {
+        r = uOffset.x();
+        theta = PI_OVER_FOUR * (uOffset.y() / uOffset.x());
+    }
+    else {
+        r = uOffset.y();
+        theta = PI_OVER_TWO - PI_OVER_FOUR * (uOffset.x() / uOffset.y());
+    }
+    return r * Point2f(std::cos(theta), std::sin(theta));
 }
 
 Vector3f Warp::squareToBeckmann(const Point2f &sample, float alpha) {
