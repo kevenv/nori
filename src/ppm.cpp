@@ -20,7 +20,8 @@ public:
         m_photonCount(props.getInteger("photonCount", 100)),
         m_kPhotons(props.getInteger("kPhotons", 10)),
         m_radius2(props.getFloat("radius2", 10.0f)),
-        m_samplesFinalGathering(props.getInteger("samplesFinalGathering", 10)),
+        m_samplesFG(props.getInteger("samplesFG", 100)),
+        m_samplesDI(props.getInteger("samplesDI", 50)),
         m_knnMethodStr(props.getString("knnMethod", "radius")),
         m_knnMethod(KNN_METHOD_RADIUS),
         m_currentPhotonCount(0),
@@ -130,15 +131,18 @@ public:
             return;
         }
 
-        //store photon if diffuse
+        // store photon if diffuse
         if(its.shape->isEmitter()) {
             return;
         }
 
-        m_photonMap[m_currentPhotonCount].x = its.p;
-        m_photonMap[m_currentPhotonCount].w = p.w;
-        m_photonMap[m_currentPhotonCount].phi = p.phi;
-        m_currentPhotonCount++;
+        // don't estimate DI with PM
+        if (bounds > 0) {
+            m_photonMap[m_currentPhotonCount].x = its.p;
+            m_photonMap[m_currentPhotonCount].w = p.w;
+            m_photonMap[m_currentPhotonCount].phi = p.phi;
+            m_currentPhotonCount++;
+        }
 
         // compute new photon power
         BSDFQueryRecord bRec(its.toLocal(-p.w), Vector3f(0.0f), ESolidAngle);
@@ -151,7 +155,7 @@ public:
 
         // scatter photon
         if(survivedRR(p, p_, sampler->next1D())) {
-            tracePhoton(p_, scene, sampler);
+            tracePhoton(p_, scene, sampler, ++bounds);
         }
 
         /*
@@ -187,13 +191,40 @@ public:
 
         //return photonMapViewer(ray, its);
 
-        // final gathering
-        if(m_samplesFinalGathering > 0) {
-            Normal3f n = its.shFrame.n;
-            float maxt = scene->getBoundingBox().getExtents().norm();
+        Normal3f n = its.shFrame.n;
+        float maxt = scene->getBoundingBox().getExtents().norm();
 
-            Color3f Lr(0.0f);
-            for (int i = 0; i < m_samplesFinalGathering; ++i) {
+        // DI
+        Color3f Ld(0.0f);
+        int m_sampleCount = 50;
+        for (int i = 0; i < m_sampleCount; ++i) {
+            for (const Emitter* emitter : scene->getEmitters()) {
+                const Shape* lightShape = emitter->getShape();
+                if (lightShape) { // is area light?
+                    Normal3f yN;
+                    float pWi;
+                    Vector3f d = emitter->sampleSolidAngle(sampler, its.p, yN, pWi);
+
+                    Ray3f lightRay(its.p, d, Epsilon, maxt);
+                    Intersection itsLight;
+                    bool intersects = scene->rayIntersect(lightRay, itsLight);
+                    if (intersects && itsLight.shape->isEmitter()) {
+                        Color3f Le = itsLight.shape->getEmitter()->eval();
+                        float cosTheta = std::max(0.0f, d.dot(n));
+                        nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
+                        nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
+
+                        Ld += brdfValue * Le * cosTheta / pWi;
+                    }
+                }
+            }
+        }
+        Ld *= 1.0f / m_sampleCount;
+
+        // GI using PM w final gathering (FG)
+        Color3f Li(0.0f);
+        if(m_samplesFG > 0) {
+            for (int i = 0; i < m_samplesFG; ++i) {
                 Vector3f d = Warp::squareToCosineHemisphere(sampler->next2D());
                 float pdf = Warp::squareToCosineHemispherePdf(d);
                 d = its.toWorld(d); // transform to world space so it aligns with the its
@@ -208,15 +239,14 @@ public:
                     nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle);
                     nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
 
-                    Lr += brdfValue * Le * cosTheta / pdf;
+                    Li += brdfValue * Le * cosTheta / pdf;
                 }
             }
-            Lr *= 1.0f / m_samplesFinalGathering;
-
-            return Lr;
+            Li *= 1.0f / m_samplesFG;
+            return Ld + Li;
         }
         else {
-            return computeLrFromDensityEstimation(ray, its);
+            return Ld + computeLrFromDensityEstimation(ray, its);
         }
     }
 
@@ -290,12 +320,14 @@ public:
             "kPhotons = %d\n"
             "radius2 = %d\n"
             "samplesFG = %d\n"
+            "samplesDI = %d\n"
             "knnMethod = %s\n"
             "]",
             m_photonCount,
             m_kPhotons,
             m_radius2,
-            m_samplesFinalGathering,
+            m_samplesFG,
+            m_samplesDI,
             m_knnMethodStr
         );
     }
@@ -309,7 +341,8 @@ private:
     const int m_photonCount;
     const int m_kPhotons;
     float m_radius2;
-    const int m_samplesFinalGathering;
+    const int m_samplesFG;
+    const int m_samplesDI;
     const std::string m_knnMethodStr;
     KNN_METHOD m_knnMethod;
 

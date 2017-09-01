@@ -20,10 +20,11 @@
 		<integer name="progressive" value="0"/>
 		<string name="knnMethod" value="photons"/>
 
-		<integer name="samplesFinalGathering" value="0"/>
-		<integer name="photonCount" value="5000000"/>
-		<float name="radius2" value="0.0008"/>
-		<integer name="kPhotons" value="500"/>
+		<integer name="samplesFG" value="100"/>
+		<integer name="samplesDI" value="50"/>
+		<integer name="photonCount" value="50000"/>
+		<float name="radius2" value="0.08"/>
+		<integer name="kPhotons" value="100"/>
 	</integrator>
 	
 	
