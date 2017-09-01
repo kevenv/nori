@@ -16,18 +16,18 @@ struct Photon {
 
 class PPM : public Integrator {
 public:
-	PPM(const PropertyList &props):
+    PPM(const PropertyList &props):
         m_photonCount(props.getInteger("photonCount", 100)),
         m_kPhotons(props.getInteger("kPhotons", 10)),
         m_radius2(props.getFloat("radius2", 10.0f)),
         m_samplesFinalGathering(props.getInteger("samplesFinalGathering", 10)),
         m_knnMethodStr(props.getString("knnMethod", "radius")),
-		m_knnMethod(KNN_METHOD_RADIUS),
+        m_knnMethod(KNN_METHOD_RADIUS),
         m_currentPhotonCount(0),
         m_emittedPhotonCount(0)
-	{
+    {
         m_progressive = static_cast<bool>(props.getInteger("progressive",1));
-		m_iterations = props.getInteger("iterations", 1);
+        m_iterations = props.getInteger("iterations", 1);
 
         if(m_knnMethodStr == "radius" || m_progressive) {
             m_knnMethod = KNN_METHOD_RADIUS;
@@ -41,7 +41,7 @@ public:
         if(m_kPhotons > m_photonCount) {
             throw NoriException("PPM: kPhotons > photonCount...");
         }
-	}
+    }
 
     void preprocess(const Scene *scene) override {
         generatePhotonMap(scene);
@@ -140,26 +140,25 @@ public:
         m_photonMap[m_currentPhotonCount].phi = p.phi;
         m_currentPhotonCount++;
 
-        // scatter photon
+        // compute new photon power
         BSDFQueryRecord bRec(its.toLocal(-p.w), Vector3f(0.0f), ESolidAngle);
         Color3f brdfValue = its.shape->getBSDF()->sample(bRec, sampler->next2D()); // = fr * cos / pdf
 
-        // compute new photon power
         Photon p_;
         p_.x = its.p;
         p_.w = its.toWorld(bRec.wo);
         p_.phi = p.phi * brdfValue;
+
+        // scatter photon
+        if(survivedRR(p, p_, sampler->next1D())) {
+            tracePhoton(p_, scene, sampler);
+        }
 
         /*
         if(bounds < 12 && !p_.phi.isBlack()) {
             tracePhoton(p_, scene, sampler, ++bounds);
         }
         */
-
-        // continue scatter photon
-        if(survivedRR(p, p_, sampler->next1D())) {
-            tracePhoton(p_, scene, sampler);
-        }
     }
 
     bool survivedRR(const Photon& p, Photon& p_, float rand) {
@@ -176,15 +175,17 @@ public:
         }
     }
 
-	Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const override {
-		/* Find the surface that is visible in the requested direction */
-		Intersection its;
+    Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const override {
+        /* Find the surface that is visible in the requested direction */
+        Intersection its;
         if (!scene->rayIntersect(ray, its)) {
             return 0.0f;
         }
         if (its.shape->isEmitter()) {
-			return its.shape->getEmitter()->eval();
-		}
+            return its.shape->getEmitter()->eval();
+        }
+
+        //return photonMapViewer(ray, its);
 
         // final gathering
         if(m_samplesFinalGathering > 0) {
@@ -217,9 +218,7 @@ public:
         else {
             return computeLrFromDensityEstimation(ray, its);
         }
-
-        //photonMapViewer(ray, its);
-	}
+    }
 
     Color3f computeLrFromDensityEstimation(const Ray3f& ray, const Intersection& its) const {
         std::vector<Photon> nearestPhotons;
@@ -284,22 +283,22 @@ public:
         return 0.0f;
     }
 
-	std::string toString() const override {
-		return tfm::format(
-			"PPM[\n"
+    std::string toString() const override {
+        return tfm::format(
+            "PPM[\n"
             "photonCount = %d\n"
             "kPhotons = %d\n"
             "radius2 = %d\n"
             "samplesFG = %d\n"
             "knnMethod = %s\n"
-			"]",
+            "]",
             m_photonCount,
             m_kPhotons,
             m_radius2,
             m_samplesFinalGathering,
             m_knnMethodStr
-		);
-	}
+        );
+    }
 
 private:
     enum KNN_METHOD {
