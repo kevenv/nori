@@ -5,11 +5,8 @@
 #include <nori/shape.h>
 #include <nori/bsdf.h>
 #include <nori/emitter.h>
-#include <pcg32.h>
 
 NORI_NAMESPACE_BEGIN
-
-pcg32 s_random;
 
 class PathTracer : public Integrator {
 public:
@@ -35,7 +32,7 @@ public:
 
 	Color3f Li_explicit(const Scene *scene, Sampler *sampler, const Ray3f &ray, int bounds) const {
 		if (m_termination == "russian-roulette") {
-			if (s_random.nextFloat() <= m_terminationProb) return Color3f(0.0f);
+			if (sampler->next1D() <= m_terminationProb) return Color3f(0.0f);
 		}
 		else if(m_termination == "path-depth") {
 			if (bounds > m_terminationBounds) return Color3f(0.0f);
@@ -149,7 +146,7 @@ public:
 
 	Color3f Li_implicit(const Scene *scene, Sampler *sampler, const Ray3f &ray, int bounds) const {
 		if (m_termination == "russian-roulette") {
-			if (s_random.nextFloat() <= m_terminationProb) return Color3f(0.0f);
+			if (sampler->next1D() <= m_terminationProb) return Color3f(0.0f);
 		}
 		else if (m_termination == "path-depth") {
 			if (bounds > m_terminationBounds) return Color3f(0.0f);
