@@ -6,7 +6,7 @@
 
     <!-- Render the visible surface normals -->
     <integrator type="direct">
-    	<integer name="sampleCount" value="1"/>
+    	<integer name="emitterSamples" value="1"/>
     </integrator>
 
     <!-- Load a Sphhere -->

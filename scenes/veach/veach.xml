@@ -9,7 +9,7 @@
 	</sampler>
 
 	<integrator type="direct">
-		<integer name="sampleCount" value="128"/>
+		<integer name="emitterSamples" value="128"/>
 
 		<string name="samplingMethod" value="mis"/>
 		<integer name="emitterSamples" value="128"/>

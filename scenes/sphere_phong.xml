@@ -6,7 +6,7 @@
 
 	<!-- Use a direct illumination integrator -->
 	<integrator type="direct">
-		<integer name="sampleCount" value="512"/>
+		<integer name="emitterSamples" value="512"/>
 
 		<string name="samplingMethod" value="mis"/>
 		<integer name="emitterSamples" value="512"/>

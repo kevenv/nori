@@ -6,7 +6,7 @@
 
 	<!-- Use a direct illumination integrator -->
 	<integrator type="direct">
-		<integer name="sampleCount" value="1"/>
+		<integer name="emitterSamples" value="1"/>
 		<string name="samplingMethod" value="solidangle"/>
 	</integrator>
 

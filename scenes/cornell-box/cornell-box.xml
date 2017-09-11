@@ -13,7 +13,7 @@
 
 		<!-- Direct integrator -->
 		<string name="samplingMethod" value="area"/>
-		<integer name="sampleCount" value="512"/>
+		<integer name="emitterSamples" value="512"/>
 
 		<!-- PPM -->
 		<integer name="iterations" value="500"/> <!-- progressive only -->
