@@ -122,7 +122,7 @@ public:
             d = its.toWorld(d); // transform to world space so it aligns with the its
             d.normalize();
             traceRay = Ray3f(its.p, d, Epsilon, maxt);
-        } while(bounds == 0 && scene->rayIntersect(traceRay, itsTmp) && itsTmp.shape->isEmitter());
+        } while(scene->rayIntersect(traceRay, itsTmp) && itsTmp.shape->isEmitter());
 
 		float cosTheta, pWi;
 		if (m_indirectSampling == "cosine") {
