@@ -38,6 +38,7 @@ public:
 			
 			for (int i = 0; i < m_sampleCount; ++i) {
 				Vector3f d = Warp::squareToUniformHemisphere(sampler->next2D());
+				float pdf = Warp::squareToUniformHemispherePdf(d);
 				d = its.toWorld(d); // transform to world space so it aligns with the its
 				d.normalize();
 				Ray3f lightRay(its.p, d, Epsilon, maxt);
@@ -51,10 +52,10 @@ public:
 					nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
 					nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
 
-					Lr += brdfValue * Le * cosTheta;
+					Lr += brdfValue * Le * cosTheta / pdf;
 				}
 			}
-			Lr *= 2.0f * M_PI / m_sampleCount;
+			Lr *= 1.0f / m_sampleCount;
 
 		}
 		else if (m_samplingMethod == "brdf") {
