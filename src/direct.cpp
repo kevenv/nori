@@ -2,7 +2,6 @@
 #include <nori/integrator.h>
 #include <nori/scene.h>
 #include <nori/warp.h>
-#include <nori/shape.h>
 #include <nori/bsdf.h>
 #include <nori/emitter.h>
 
@@ -12,7 +11,6 @@ class DirectIntegrator : public Integrator {
 public:
 	DirectIntegrator(const PropertyList &props) :
         m_samplingMethod(props.getString("samplingMethod", "area")),
-		m_sampleCount(props.getInteger("sampleCount", 1)),
         m_emitterSamples(props.getInteger("emitterSamples", 1)),
         m_brdfSamples(props.getInteger("brdfSamples", 1))
 	{
@@ -36,31 +34,31 @@ public:
 		Color3f Lr(0.0f);
 		if (m_samplingMethod == "uniform") {
 			
-			for (int i = 0; i < m_sampleCount; ++i) {
-				Vector3f d = Warp::squareToUniformHemisphere(sampler->next2D());
-				float pdf = Warp::squareToUniformHemispherePdf(d);
-				d = its.toWorld(d); // transform to world space so it aligns with the its
-				d.normalize();
-				Ray3f lightRay(its.p, d, Epsilon, maxt);
+			for (int i = 0; i < m_emitterSamples; ++i) {
+				Vector3f wi = Warp::squareToUniformHemisphere(sampler->next2D());
+				float pdf = Warp::squareToUniformHemispherePdf(wi);
+				wi = its.toWorld(wi); // transform to world space so it aligns with the its
+				wi.normalize();
+				Ray3f lightRay(its.p, wi, Epsilon, maxt);
 
 				Intersection itsLight;
 				bool intersects = scene->rayIntersect(lightRay, itsLight);
 				if (intersects && itsLight.shape->isEmitter()) {
 					const Emitter* emitter = itsLight.shape->getEmitter();
 					Color3f Le = emitter->eval();
-					float cosTheta = std::max(0.0f, d.dot(n));
-					nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
+					float cosTheta = std::max(0.0f, wi.dot(n));
+					nori::BSDFQueryRecord bRec(its.toLocal(wi), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
 					nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
 
 					Lr += brdfValue * Le * cosTheta / pdf;
 				}
 			}
-			Lr *= 1.0f / m_sampleCount;
+			Lr *= 1.0f / m_emitterSamples;
 
 		}
 		else if (m_samplingMethod == "brdf") {
 
-			for (int i = 0; i < m_sampleCount; ++i) {
+			for (int i = 0; i < m_emitterSamples; ++i) {
 				nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), Vector3f(0.0f), nori::ESolidAngle, its.toLocal(n));
 				nori::Color3f brdfValue = its.shape->getBSDF()->sample(bRec, sampler->next2D());
 				Vector3f d = its.toWorld(bRec.wo); // transform to world space so it aligns with the its
@@ -75,12 +73,12 @@ public:
 					Lr += brdfValue * Le;
 				}
 			}
-			Lr *= 1.0f / m_sampleCount;
+			Lr *= 1.0f / m_emitterSamples;
 
 		}
 		else if (m_samplingMethod == "area") {
 
-			for (int i = 0; i < m_sampleCount; ++i) {
+			for (int i = 0; i < m_emitterSamples; ++i) {
 				for (const Emitter* emitter : scene->getEmitters()) {
 					const Shape* lightShape = emitter->getShape();
 					if (lightShape) { // is area light?
@@ -110,12 +108,12 @@ public:
 				}
 			}
 
-			Lr *= 1.0f / m_sampleCount;
+			Lr *= 1.0f / m_emitterSamples;
 
 		}
 		else if (m_samplingMethod == "solidangle") {
 			
-			for (int i = 0; i < m_sampleCount; ++i) {
+			for (int i = 0; i < m_emitterSamples; ++i) {
 				for (const Emitter* emitter : scene->getEmitters()) {
 					const Shape* lightShape = emitter->getShape();
 					if (lightShape) { // is area light?
@@ -137,7 +135,7 @@ public:
 					}
 				}
 			}
-			Lr *= 1.0f / m_sampleCount;
+			Lr *= 1.0f / m_emitterSamples;
 
 		}
 		else if (m_samplingMethod == "mis") {
@@ -239,12 +237,10 @@ public:
 		return tfm::format(
 			"DirectIntegrator[\n"
 			" samplingMethod = %d\n"
-			" sampleCount = %d\n"
             " emitterSamples = %d\n"
             " brdfSamples = %d\n"
 			"]",
 			m_samplingMethod,
-			m_sampleCount,
             m_emitterSamples,
             m_brdfSamples
 		);
@@ -252,7 +248,6 @@ public:
 
 private:
 	const std::string m_samplingMethod;
-	const int m_sampleCount;
     const int m_emitterSamples;
     const int m_brdfSamples;
 };
