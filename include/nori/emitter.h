@@ -31,13 +31,13 @@ class Sampler;
 class Emitter : public NoriObject {
 public:
 
-	virtual Color3f eval() const = 0;
+    virtual Color3f eval() const = 0;
 
-	virtual Point3f sample(Sampler* sampler, Normal3f& normal) const = 0;
-	virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi) const = 0;
+    virtual Point3f sample(Sampler* sampler, Normal3f& normal) const = 0;
+    virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi) const = 0;
 
-	const Shape* getShape() const { return m_shape; }
-	void setShape(Shape* shape) { m_shape = shape; }
+    const Shape* getShape() const { return m_shape; }
+    void setShape(Shape* shape) { m_shape = shape; }
 
     /**
      * \brief Return the type of object (i.e. Mesh/Emitter/etc.) 
@@ -46,7 +46,7 @@ public:
     EClassType getClassType() const { return EEmitter; }
 
 protected:
-	Shape* m_shape = nullptr;
+    Shape* m_shape = nullptr;
 };
 
 NORI_NAMESPACE_END

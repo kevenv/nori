@@ -50,17 +50,17 @@ public:
 
     /// Evaluate the BRDF for the given pair of directions
     Color3f eval(const BSDFQueryRecord &bRec) const {
-    	throw NoriException("MicrofacetBRDF::eval(): not implemented!");
+        throw NoriException("MicrofacetBRDF::eval(): not implemented!");
     }
 
     /// Evaluate the sampling density of \ref sample() wrt. solid angles
     float pdf(const BSDFQueryRecord &bRec) const {
-    	throw NoriException("MicrofacetBRDF::pdf(): not implemented!");
+        throw NoriException("MicrofacetBRDF::pdf(): not implemented!");
     }
 
     /// Sample the BRDF
     Color3f sample(BSDFQueryRecord &bRec, const Point2f &_sample) const {
-    	throw NoriException("MicrofacetBRDF::sample(): not implemented!");
+        throw NoriException("MicrofacetBRDF::sample(): not implemented!");
 
         // Note: Once you have implemented the part that computes the scattered
         // direction, the last part of this function should simply return the

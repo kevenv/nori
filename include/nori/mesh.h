@@ -48,15 +48,15 @@ public:
     /// Return the surface area of the given triangle
     float surfaceArea(uint32_t index) const;
 
-	virtual BoundingBox3f getBoundingBox(uint32_t index) const override;
+    virtual BoundingBox3f getBoundingBox(uint32_t index) const override;
 
     //// Return the centroid of the given triangle
-	virtual Point3f getCentroid(uint32_t index) const override;
+    virtual Point3f getCentroid(uint32_t index) const override;
 
-	virtual float getArea() const override;
+    virtual float getArea() const override;
 
-	virtual Point3f sample(Sampler* sampler, Normal3f& normal) const override;
-	virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi) const override;
+    virtual Point3f sample(Sampler* sampler, Normal3f& normal) const override;
+    virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi) const override;
 
     /** \brief Ray-triangle intersection test
      *
@@ -83,9 +83,9 @@ public:
      * \return
      *   \c true if an intersection has been detected
      */
-	virtual bool rayIntersect(uint32_t index, const Ray3f &ray, float &u, float &v, float &t) const override;
+    virtual bool rayIntersect(uint32_t index, const Ray3f &ray, float &u, float &v, float &t) const override;
 
-	virtual void computeIntersectionInfo(uint32_t index, const Ray3f &ray, Intersection & its) const override;
+    virtual void computeIntersectionInfo(uint32_t index, const Ray3f &ray, Intersection & its) const override;
 
     /// Return a pointer to the vertex positions
     const MatrixXf &getVertexPositions() const { return m_V; }
@@ -98,7 +98,7 @@ public:
 
     /// Return a pointer to the triangle vertex index list
     const MatrixXu &getIndices() const { return m_F; }
-	
+    
     /// Return the name of this mesh
     const std::string &getName() const { return m_name; }
 
@@ -110,7 +110,7 @@ protected:
     Mesh();
 
 protected:
-	std::string m_name;                   ///< Identifying name
+    std::string m_name;                   ///< Identifying name
 
     MatrixXf      m_V;                   ///< Vertex positions
     MatrixXf      m_N;                   ///< Vertex normals

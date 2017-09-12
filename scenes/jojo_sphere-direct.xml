@@ -1,60 +1,60 @@
 <scene>
-	<!-- Independent sample generator, user-selected samples per pixel -->
-	<sampler type="independent">
-		<integer name="sampleCount" value="16"/>
-	</sampler>
+    <!-- Independent sample generator, user-selected samples per pixel -->
+    <sampler type="independent">
+        <integer name="sampleCount" value="16"/>
+    </sampler>
 
-	<!-- Use a direct illumination integrator -->
-	<integrator type="direct">
-		<integer name="emitterSamples" value="512"/>
+    <!-- Use a direct illumination integrator -->
+    <integrator type="direct">
+        <integer name="emitterSamples" value="512"/>
 
-		<string name="samplingMethod" value="solidangle"/>
-		<integer name="emitterSamples" value="512"/>
-		<integer name="bsdfSamples" value="512"/>
-	</integrator>
+        <string name="samplingMethod" value="solidangle"/>
+        <integer name="emitterSamples" value="512"/>
+        <integer name="bsdfSamples" value="512"/>
+    </integrator>
 
-	<!-- Illuminate using an area light -->
-	<shape type="sphere">
-		<point name="center" value="1,-1.5,1.75"/>
+    <!-- Illuminate using an area light -->
+    <shape type="sphere">
+        <point name="center" value="1,-1.5,1.75"/>
         <float name="radius" value="0.1"/>
-		<emitter type="area">
-			<color name="radiance" value="100,100,100"/>
-		</emitter>
-	</shape>
+        <emitter type="area">
+            <color name="radiance" value="100,100,100"/>
+        </emitter>
+    </shape>
 
-	<!-- Analytic sphere shape -->
-	<shape type="sphere">
-		<point name="center" value="0,0,0"/>
+    <!-- Analytic sphere shape -->
+    <shape type="sphere">
+        <point name="center" value="0,0,0"/>
         <float name="radius" value="1"/>
-		<bsdf type="phong">
-			<float name="shininess" value="10"/>
-			<color name="diffuseReflectance" value="1,0,0"/>
-			<color name="specularReflectance" value="1,1,1"/>
-		</bsdf>
-	</shape>
+        <bsdf type="phong">
+            <float name="shininess" value="10"/>
+            <color name="diffuseReflectance" value="1,0,0"/>
+            <color name="specularReflectance" value="1,1,1"/>
+        </bsdf>
+    </shape>
 
-	<!-- Ground plane -->
-	<shape type="obj">
-		<string name="filename" value="plane.obj"/>
-		<bsdf type="diffuse"/>
-		<transform name="toWorld">
-			<scale value="100,1,100"/>
-			<rotate axis="1,0,0" angle="90"/>
-			<translate value="0,0,-1"/>
-		</transform>
-	</shape>
+    <!-- Ground plane -->
+    <shape type="obj">
+        <string name="filename" value="plane.obj"/>
+        <bsdf type="diffuse"/>
+        <transform name="toWorld">
+            <scale value="100,1,100"/>
+            <rotate axis="1,0,0" angle="90"/>
+            <translate value="0,0,-1"/>
+        </transform>
+    </shape>
 
-	<!-- Render the scene as viewed by a perspective camera -->
-	<camera type="perspective">
-		<transform name="toWorld">
-			<lookat target="0,0,0" origin="0,-4,0" up="0,0,1"/>
-		</transform>
+    <!-- Render the scene as viewed by a perspective camera -->
+    <camera type="perspective">
+        <transform name="toWorld">
+            <lookat target="0,0,0" origin="0,-4,0" up="0,0,1"/>
+        </transform>
 
-		<!-- Field of view: 40 degrees -->
-		<float name="fov" value="40"/>
+        <!-- Field of view: 40 degrees -->
+        <float name="fov" value="40"/>
 
-		<!-- 768 x 768 pixels -->
-		<integer name="width" value="500"/>
-		<integer name="height" value="500"/>
-	</camera>
+        <!-- 768 x 768 pixels -->
+        <integer name="width" value="500"/>
+        <integer name="height" value="500"/>
+    </camera>
 </scene>

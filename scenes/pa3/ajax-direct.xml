@@ -1,62 +1,62 @@
 <scene>
-	<!-- Independent sample generator, 32 samples per pixel -->
-	<sampler type="independent">
-		<integer name="sampleCount" value="512"/>
-	</sampler>
+    <!-- Independent sample generator, 32 samples per pixel -->
+    <sampler type="independent">
+        <integer name="sampleCount" value="512"/>
+    </sampler>
 
-	<!-- Use the simple point light integrator -->
+    <!-- Use the simple point light integrator -->
     <integrator type="direct">
         <point name="position" value="-20, 40, 20"/>
         <color name="energy" value="3.76e4, 3.76e4, 3.76e4"/>
     </integrator>
 
-	<!-- Load the Ajax bust (a freely available scan from the Jotero forum) -->
-	<mesh type="obj">
-		<string name="filename" value="ajax.obj"/>
-		<bsdf type="diffuse"/>
-	</mesh>
+    <!-- Load the Ajax bust (a freely available scan from the Jotero forum) -->
+    <mesh type="obj">
+        <string name="filename" value="ajax.obj"/>
+        <bsdf type="diffuse"/>
+    </mesh>
 
-		<!-- Illuminate using an area light -->
-	<shape type="sphere">
-		<point name="center" value="15,30,0"/>
+        <!-- Illuminate using an area light -->
+    <shape type="sphere">
+        <point name="center" value="15,30,0"/>
         <float name="radius" value="3.5"/>
-		<emitter type="area">
-			<color name="radiance" value="100,100,100"/>
-		</emitter>
-	</shape>
+        <emitter type="area">
+            <color name="radiance" value="100,100,100"/>
+        </emitter>
+    </shape>
 
-	<shape type="sphere">
-		<point name="center" value="-15,-30,0"/>
+    <shape type="sphere">
+        <point name="center" value="-15,-30,0"/>
         <float name="radius" value="3.5"/>
-		<emitter type="area">
-			<color name="radiance" value="100,100,100"/>
-		</emitter>
-	</shape>
+        <emitter type="area">
+            <color name="radiance" value="100,100,100"/>
+        </emitter>
+    </shape>
 
-	<!-- Ground plane -->
-	<shape type="obj">
-		<string name="filename" value="../plane.obj"/>
-		<bsdf type="diffuse"/>
-		<transform name="toWorld">
-			<scale value="100,1,100"/>
-			<translate value="0,0,-1"/>
-		</transform>
-	</shape>
+    <!-- Ground plane -->
+    <shape type="obj">
+        <string name="filename" value="../plane.obj"/>
+        <bsdf type="diffuse"/>
+        <transform name="toWorld">
+            <scale value="100,1,100"/>
+            <translate value="0,0,-1"/>
+        </transform>
+    </shape>
 
-	<!-- Render the scene viewed by a perspective camera -->
-	<camera type="perspective">
+    <!-- Render the scene viewed by a perspective camera -->
+    <camera type="perspective">
         <!-- 3D origin, target point, and 'up' vector -->
-		<transform name="toWorld">
+        <transform name="toWorld">
             <lookat target="-64.8161, 47.2211, 23.8576"
                     origin="-65.6055, 47.5762, 24.3583"
                     up="0.299858, 0.934836, -0.190177"/>
-		</transform>
+        </transform>
 
-		<!-- Field of view: 30 degrees -->
-		<float name="fov" value="30"/>
+        <!-- Field of view: 30 degrees -->
+        <float name="fov" value="30"/>
 
-		<!-- 768 x 768 pixels -->
-		<integer name="width" value="768"/>
-		<integer name="height" value="768"/>
-	</camera>
+        <!-- 768 x 768 pixels -->
+        <integer name="width" value="768"/>
+        <integer name="height" value="768"/>
+    </camera>
 </scene>

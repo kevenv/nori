@@ -28,11 +28,11 @@ NORI_NAMESPACE_BEGIN
  */
 struct BSDFQueryRecord {
     /// Incident direction (in the local frame)
-	// CAMERA RAY
+    // CAMERA RAY
     Vector3f wi;
 
     /// Outgoing direction (in the local frame)
-	// LIGHT RAY
+    // LIGHT RAY
     Vector3f wo;
 
     /// Relative refractive index in the sampled direction
@@ -41,7 +41,7 @@ struct BSDFQueryRecord {
     /// Measure associated with the sample
     EMeasure measure;
 
-	Normal3f N;
+    Normal3f N;
 
     /// Create a new record for sampling the BSDF
     BSDFQueryRecord(const Vector3f &wi)
@@ -52,10 +52,10 @@ struct BSDFQueryRecord {
             const Vector3f &wo, EMeasure measure)
         : wi(wi), wo(wo), measure(measure) { }
 
-	/// Create a new record for querying the BSDF
-	BSDFQueryRecord(const Vector3f &wi,
-		const Vector3f &wo, EMeasure measure, const Normal3f& N)
-		: wi(wi), wo(wo), measure(measure), N(N) { }
+    /// Create a new record for querying the BSDF
+    BSDFQueryRecord(const Vector3f &wi,
+        const Vector3f &wo, EMeasure measure, const Normal3f& N)
+        : wi(wi), wo(wo), measure(measure), N(N) { }
 };
 
 /**

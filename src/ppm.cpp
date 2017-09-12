@@ -145,7 +145,7 @@ public:
         }
 
         // compute new photon power
-		//wi,wo
+        //wi,wo
         BSDFQueryRecord bRec(its.toLocal(-p.w), Vector3f(0.0f), ESolidAngle);
         Color3f brdfValue = its.shape->getBSDF()->sample(bRec, sampler->next2D()); // = fr * cos / pdf
 
@@ -211,7 +211,7 @@ public:
                         bool intersects = scene->rayIntersect(lightRay, itsLight);
                         if (intersects && (itsLight.shape->isEmitter() && itsLight.shape == lightShape)) {
                             Color3f Le = itsLight.shape->getEmitter()->eval();
-							//wi,wo
+                            //wi,wo
                             nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle, its.toLocal(n));
                             nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
 
@@ -237,7 +237,7 @@ public:
                 bool intersects = scene->rayIntersect(gatherRay, itsGather);
                 if (intersects && !itsGather.shape->isEmitter()) {
                     Color3f Le = computeLrFromDensityEstimation(gatherRay, itsGather);
-					//wi,wo
+                    //wi,wo
                     nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
                     nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
 
@@ -288,7 +288,7 @@ public:
         // compute radiance estimate from k nearest photons
         Color3f Lr(0.0f);
         for(int i = 0; i < k; ++i) {
-			//wi,wo
+            //wi,wo
             BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(-m_photonMap[i].w), ESolidAngle);
             Color3f brdfValue = its.shape->getBSDF()->eval(bRec) /* BRDF * cosTheta */ / Frame::cosTheta(bRec.wo);
             Lr += brdfValue * nearestPhotons[i].phi / (M_PI*radius2);

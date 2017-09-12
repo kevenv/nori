@@ -62,11 +62,11 @@ public:
     /// Probability density of \ref squareToCosineHemisphere()
     static float squareToCosineHemispherePdf(const Vector3f &v);
 
-	static Vector3f squareToUniformCone(const Point2f &sample, float cosThetaMax, float &sinTheta, float &cosTheta, float &phi);
+    static Vector3f squareToUniformCone(const Point2f &sample, float cosThetaMax, float &sinTheta, float &cosTheta, float &phi);
 
-	static float squareToUniformConePdf(float cosThetaMax);
+    static float squareToUniformConePdf(float cosThetaMax);
 
-	static Point2f concentricSampleDisk(const Point2f &sample);
+    static Point2f concentricSampleDisk(const Point2f &sample);
 
     /// Warp a uniformly distributed square sample to a Beckmann distribution * cosine for the given 'alpha' parameter
     static Vector3f squareToBeckmann(const Point2f &sample, float alpha);

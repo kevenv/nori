@@ -22,15 +22,15 @@
 NORI_NAMESPACE_BEGIN
 
 void Accel::addShape(Shape *shape) {
-	m_bvh.addShape(shape);
+    m_bvh.addShape(shape);
 }
 
 void Accel::build() {
-	m_bvh.build();
+    m_bvh.build();
 }
 
 bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) const {
-	return m_bvh.rayIntersect(ray_, its, shadowRay);
+    return m_bvh.rayIntersect(ray_, its, shadowRay);
 }
 
 NORI_NAMESPACE_END

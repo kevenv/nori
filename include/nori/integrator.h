@@ -43,7 +43,7 @@ public:
     // if progressive, use progressive renderer and call beforeIteration()
     bool isProgressive() const { return m_progressive; }
 
-	int getIterations() const { return m_iterations; }
+    int getIterations() const { return m_iterations; }
 
     /**
      * \brief Sample the incident radiance along a ray
@@ -67,7 +67,7 @@ public:
 
 protected:
     bool m_progressive {false};
-	int m_iterations{ 0 };
+    int m_iterations{ 0 };
 };
 
 NORI_NAMESPACE_END

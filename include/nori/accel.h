@@ -67,7 +67,7 @@ public:
     bool rayIntersect(const Ray3f &ray, Intersection &its, bool shadowRay) const;
 
 private:
-	BVH m_bvh;
+    BVH m_bvh;
 };
 
 NORI_NAMESPACE_END

@@ -32,7 +32,7 @@ class NoriObject {
 public:
     enum EClassType {
         EScene = 0,
-		EShape,
+        EShape,
         EBSDF,
         EPhaseFunction,
         EEmitter,
@@ -91,7 +91,7 @@ public:
     static std::string classTypeName(EClassType type) {
         switch (type) {
             case EScene:      return "scene";
-			case EShape:      return "shape";
+            case EShape:      return "shape";
             case EBSDF:       return "bsdf";
             case EEmitter:    return "emitter";
             case ECamera:     return "camera";

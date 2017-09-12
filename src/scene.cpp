@@ -50,11 +50,11 @@ void Scene::activate() {
             NoriObjectFactory::createInstance("independent", PropertyList()));
     }
 
-	for (auto& s : m_shapes) {
-		if (s->getEmitter()) {
-			m_emitters.push_back(s->getEmitter());
-		}
-	}
+    for (auto& s : m_shapes) {
+        if (s->getEmitter()) {
+            m_emitters.push_back(s->getEmitter());
+        }
+    }
 
     cout << endl;
     cout << "Configuration: " << toString() << endl;
@@ -63,16 +63,16 @@ void Scene::activate() {
 
 void Scene::addChild(NoriObject *obj) {
     switch (obj->getClassType()) {
-		case EShape: {
-				Shape *shape = static_cast<Shape *>(obj);
-				m_accel->addShape(shape);
-				m_shapes.push_back(shape);
-			}
-			break;
+        case EShape: {
+                Shape *shape = static_cast<Shape *>(obj);
+                m_accel->addShape(shape);
+                m_shapes.push_back(shape);
+            }
+            break;
         
         case EEmitter: {
                 Emitter *emitter = static_cast<Emitter *>(obj);
-				m_emitters.push_back(emitter);
+                m_emitters.push_back(emitter);
             }
             break;
 

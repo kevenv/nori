@@ -1,79 +1,79 @@
 <scene>
-	<!-- Independent sample generator, user-selected samples per pixel -->
-	<sampler type="independent">
-		<integer name="sampleCount" value="128"/>
-	</sampler>
+    <!-- Independent sample generator, user-selected samples per pixel -->
+    <sampler type="independent">
+        <integer name="sampleCount" value="128"/>
+    </sampler>
 
-	<!-- Use a direct illumination integrator -->
-	<integrator type="direct">
-		<integer name="emitterSamples" value="1"/>
-		<string name="samplingMethod" value="solidangle"/>
-	</integrator>
+    <!-- Use a direct illumination integrator -->
+    <integrator type="direct">
+        <integer name="emitterSamples" value="1"/>
+        <string name="samplingMethod" value="solidangle"/>
+    </integrator>
 
-	<shape type="sphere">
-		<point name="center" value="-3,-3,3"/>
+    <shape type="sphere">
+        <point name="center" value="-3,-3,3"/>
         <float name="radius" value="0.1"/>
-		<emitter type="area">
-			<color name="radiance" value="300,300,300"/>
-		</emitter>
-	</shape>
+        <emitter type="area">
+            <color name="radiance" value="300,300,300"/>
+        </emitter>
+    </shape>
 
-	<!-- Analytic sphere shape -->
-	<shape type="sphere">
-		<point name="center" value="0,0,0"/>
+    <!-- Analytic sphere shape -->
+    <shape type="sphere">
+        <point name="center" value="0,0,0"/>
         <float name="radius" value="1"/>
-		<bsdf type="diffuse">
-			<color name="albedo" value="1,0,0"/>
-		</bsdf>
-	</shape>
+        <bsdf type="diffuse">
+            <color name="albedo" value="1,0,0"/>
+        </bsdf>
+    </shape>
 
-	<shape type="sphere">
-		<point name="center" value="-2,0,-0.7"/>
+    <shape type="sphere">
+        <point name="center" value="-2,0,-0.7"/>
         <float name="radius" value="0.3"/>
-		<bsdf type="diffuse">
-			<color name="albedo" value="0,0,1"/>
-		</bsdf>
-	</shape>
+        <bsdf type="diffuse">
+            <color name="albedo" value="0,0,1"/>
+        </bsdf>
+    </shape>
 
-	<shape type="sphere">
-		<point name="center" value="0,-3,-0.7"/>
+    <shape type="sphere">
+        <point name="center" value="0,-3,-0.7"/>
         <float name="radius" value="0.3"/>
-		<bsdf type="diffuse">
-			<color name="albedo" value="0,1,0"/>
-		</bsdf>
-	</shape>
+        <bsdf type="diffuse">
+            <color name="albedo" value="0,1,0"/>
+        </bsdf>
+    </shape>
 
-	<shape type="sphere">
-		<point name="center" value="2,0,-0.7"/>
+    <shape type="sphere">
+        <point name="center" value="2,0,-0.7"/>
         <float name="radius" value="0.3"/>
-		<bsdf type="diffuse">
-			<color name="albedo" value="1,1,0"/>
-		</bsdf>
-	</shape>
+        <bsdf type="diffuse">
+            <color name="albedo" value="1,1,0"/>
+        </bsdf>
+    </shape>
 
 
-	<!-- Ground plane -->
-	<shape type="obj">
-		<string name="filename" value="plane.obj"/>
-		<bsdf type="diffuse"/>
-		<transform name="toWorld">
-			<scale value="10,1,10"/>
-			<rotate axis="1,0,0" angle="90"/>
-			<translate value="0,0,-1"/>
-		</transform>
-	</shape>
+    <!-- Ground plane -->
+    <shape type="obj">
+        <string name="filename" value="plane.obj"/>
+        <bsdf type="diffuse"/>
+        <transform name="toWorld">
+            <scale value="10,1,10"/>
+            <rotate axis="1,0,0" angle="90"/>
+            <translate value="0,0,-1"/>
+        </transform>
+    </shape>
 
-	<!-- Render the scene as viewed by a perspective camera -->
-	<camera type="perspective">
-		<transform name="toWorld">
-			<lookat target="0,0,0" origin="0,-9,1" up="0,0,1"/>
-		</transform>
+    <!-- Render the scene as viewed by a perspective camera -->
+    <camera type="perspective">
+        <transform name="toWorld">
+            <lookat target="0,0,0" origin="0,-9,1" up="0,0,1"/>
+        </transform>
 
-		<!-- Field of view: 40 degrees -->
-		<float name="fov" value="40"/>
+        <!-- Field of view: 40 degrees -->
+        <float name="fov" value="40"/>
 
-		<!-- 768 x 768 pixels -->
-		<integer name="width" value="768"/>
-		<integer name="height" value="768"/>
-	</camera>
+        <!-- 768 x 768 pixels -->
+        <integer name="width" value="768"/>
+        <integer name="height" value="768"/>
+    </camera>
 </scene>
