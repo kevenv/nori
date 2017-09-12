@@ -61,7 +61,7 @@ public:
 		for (const Emitter* emitter : scene->getEmitters()) {
 			const Shape* lightShape = emitter->getShape();
 			if (lightShape) { // is area light?
-				if (m_directSampling == "solidAngle") {
+				if (m_directSampling == "solidangle") {
 					Normal3f yN;
 					float pWi;
 					Vector3f wo = emitter->sampleSolidAngle(sampler, its.p, yN, pWi);
