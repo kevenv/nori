@@ -93,22 +93,20 @@ public:
 						Intersection itsLight;
 						bool intersects = scene->rayIntersect(lightRay, itsLight);
 						if (intersects && (itsLight.shape->isEmitter() && itsLight.shape == lightShape)) {
-							float cosTheta_i = 1.0; // calculated by BRDF::eval()
-							float cosTheta_o = std::max(0.0f, wo.dot(yN));
-							float G = (cosTheta_i * cosTheta_o) / ((x - y).squaredNorm());
-
 							float pA = 1.0f / lightShape->getArea();
+							float d2 = (y - x).squaredNorm();
+							float cosThetaY = std::max(0.0f, (-wo).dot(yN)); //todo: division by zero
+							float pdf = d2 / cosThetaY * pA;
 
 							//wi,wo
 							nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle, its.toLocal(n));
 							nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
 
-							Lr += brdfValue * Le * G / pA;
+							Lr += brdfValue * Le / pdf;
 						}
 					}
 				}
 			}
-
 			Lr *= 1.0f / m_emitterSamples;
 
 		}

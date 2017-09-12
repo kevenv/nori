@@ -26,8 +26,8 @@
 		<float name="radius2" value="0.08"/>
 		<integer name="kPhotons" value="100"/>
 	</integrator>
-	
-	
+
+	<!--
 	<shape type="sphere">
 		<point name="center" value="0,0,1.9"/>
         <float name="radius" value="0.05"/>
@@ -35,18 +35,17 @@
 			<color name="radiance" value="300,300,300"/>
 		</emitter>
 	</shape>
+	-->
 	
-	<!--
 	<shape type="plane">
-		<point name="center" value="0,0,2"/>
+		<point name="center" value="0,0,1.985"/>
 		<float name="width" value="1"/>
 		<float name="height" value="1"/>
+		<float name="normalZ" value="-1"/>
 		<emitter type="area">
-			<color name="radiance" value="40,40,40"/>
+			<color name="radiance" value="20,20,20"/>
 		</emitter>
 	</shape>
-	-->
-
 
 	<!-- Cornell box -->
 	<shape type="obj">
