@@ -85,6 +85,8 @@ public:
      *     A record with detailed information on the BSDF query
      * \return
      *     The BSDF value, evaluated for each color channel
+           The returned value also includes the cosine
+     *     foreshortening factor associated with the outgoing direction
      */
     virtual Color3f eval(const BSDFQueryRecord &bRec) const = 0;
 

@@ -11,18 +11,13 @@ NORI_NAMESPACE_BEGIN
 class Phong : public BSDF {
 public:
     Phong(const PropertyList &propList):
-		m_shininess(propList.getFloat("shininess", 1.0f)),
-		m_diffuseReflectance(propList.getColor("diffuseReflectance", Color3f(1.0f,1.0f,1.0f))),
-		m_specularReflectance(propList.getColor("specularReflectance", Color3f(1.0f, 1.0f, 1.0f)))
-	{
-        float specAvg = getLuminance(m_specularReflectance);
-        float diffAvg = getLuminance(m_diffuseReflectance);
+        m_shininess(propList.getFloat("shininess", 1.0f)),
+        m_diffuseReflectance(propList.getColor("diffuseReflectance", Color3f(1.0f,1.0f,1.0f))),
+        m_specularReflectance(propList.getColor("specularReflectance", Color3f(1.0f, 1.0f, 1.0f)))
+    {
+        float specAvg = m_specularReflectance.getLuminance();
+        float diffAvg = m_diffuseReflectance.getLuminance();
         m_specularSamplingWeight = specAvg / (specAvg + diffAvg);
-    }
-
-    /// Return the luminance (assuming the color value is expressed in linear sRGB)
-    inline float getLuminance(Color3f c) const {
-        return c[0] * 0.212671f + c[1] * 0.715160f + c[2] * 0.072169f;
     }
 
     /// Reflection in local coordinates
@@ -41,11 +36,11 @@ public:
             return Color3f(0.0f);
 
         float alpha = bRec.wo.dot(reflect(bRec.wi));
-		float specular = 0.0f;
+        float specular = 0.0f;
         if(alpha > 0) {
             specular = (m_shininess + 2) / (2 * M_PI) * pow(alpha, m_shininess);
         }
-		return ((m_diffuseReflectance / M_PI) + m_specularReflectance * specular) * Frame::cosTheta(bRec.wo);
+        return ((m_diffuseReflectance / M_PI) + m_specularReflectance * specular) * Frame::cosTheta(bRec.wo);
     }
 
     /// Compute the density of \ref sample() wrt. solid angles
@@ -61,7 +56,7 @@ public:
         float alpha = bRec.wo.dot(reflect(bRec.wi));
         float specularProb = 0.0f;
         if(alpha > 0) {
-            specularProb = (m_shininess + 2)/(2*M_PI) * pow(alpha, m_shininess);
+            specularProb = (m_shininess + 1)/(2*M_PI) * std::pow(alpha, m_shininess);
         }
         return m_specularSamplingWeight * specularProb + (1-m_specularSamplingWeight) * diffuseProb;
     }
@@ -101,8 +96,11 @@ public:
 
         // Relative index of refraction: no change
         bRec.eta = 1.0f;
-
-        return eval(bRec) / pdf(bRec);
+        float _pdf = pdf(bRec);
+        if (_pdf == 0.0f) {
+            return 0.0f;
+        }
+        return eval(bRec) / _pdf;
     }
 
     bool isDiffuse() const {
@@ -114,21 +112,21 @@ public:
         return tfm::format(
             "Phong[\n"
             "  shininess = %d\n"
-			"  diffuseReflectance = %s\n"
-			"  specularReflectance = %s\n"
+            "  diffuseReflectance = %s\n"
+            "  specularReflectance = %s\n"
             "]",
-			m_shininess,
-			m_diffuseReflectance.toString(),
-			m_specularReflectance.toString()
-			);
+            m_shininess,
+            m_diffuseReflectance.toString(),
+            m_specularReflectance.toString()
+            );
     }
 
     EClassType getClassType() const { return EBSDF; }
 
 private:
-	const float m_shininess;
-	const Color3f m_diffuseReflectance;
-	const Color3f m_specularReflectance;
+    const float m_shininess;
+    const Color3f m_diffuseReflectance;
+    const Color3f m_specularReflectance;
     float m_specularSamplingWeight;
 };
 

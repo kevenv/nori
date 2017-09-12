@@ -41,7 +41,7 @@ public:
             return Color3f(0.0f);
 
         /* The BRDF is simply the albedo / pi */
-        return m_albedo * INV_PI;
+        return m_albedo * INV_PI * Frame::cosTheta(bRec.wo);
     }
 
     /// Compute the density of \ref sample() wrt. solid angles
@@ -60,7 +60,7 @@ public:
            Note that the directions in 'bRec' are in local coordinates,
            so Frame::cosTheta() actually just returns the 'z' component.
         */
-        return INV_PI * Frame::cosTheta(bRec.wo);
+        return Frame::cosTheta(bRec.wo) * INV_PI;
     }
 
     /// Draw a a sample from the BRDF model

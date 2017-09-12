@@ -210,11 +210,10 @@ public:
                         bool intersects = scene->rayIntersect(lightRay, itsLight);
                         if (intersects && itsLight.shape->isEmitter()) {
                             Color3f Le = itsLight.shape->getEmitter()->eval();
-                            float cosTheta = std::max(0.0f, d.dot(n));
                             nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
-                            nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
+                            nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
 
-                            Ld += brdfValue * Le * cosTheta / pWi;
+                            Ld += brdfValue * Le / pWi;
                         }
                     }
                 }
@@ -236,11 +235,10 @@ public:
                 bool intersects = scene->rayIntersect(gatherRay, itsGather);
                 if (intersects && !itsGather.shape->isEmitter()) {
                     Color3f Le = computeLrFromDensityEstimation(gatherRay, itsGather);
-                    float cosTheta = std::max(0.0f, d.dot(n));
                     nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle);
-                    nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
+                    nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
 
-                    Li += brdfValue * Le * cosTheta / pdf;
+                    Li += brdfValue * Le / pdf;
                 }
             }
             Li *= 1.0f / m_samplesFG;
@@ -288,7 +286,7 @@ public:
         Color3f Lr(0.0f);
         for(int i = 0; i < k; ++i) {
             BSDFQueryRecord bRec(its.toLocal(-m_photonMap[i].w), its.toLocal(-ray.d), ESolidAngle);
-            Color3f brdfValue = its.shape->getBSDF()->eval(bRec);
+            Color3f brdfValue = its.shape->getBSDF()->eval(bRec) /* BRDF * cosTheta */ / Frame::cosTheta(bRec.wo);
             Lr += brdfValue * nearestPhotons[i].phi / (M_PI*radius2);
         }
         return Lr;
