@@ -145,6 +145,7 @@ public:
         }
 
         // compute new photon power
+		//wi,wo
         BSDFQueryRecord bRec(its.toLocal(-p.w), Vector3f(0.0f), ESolidAngle);
         Color3f brdfValue = its.shape->getBSDF()->sample(bRec, sampler->next2D()); // = fr * cos / pdf
 
@@ -203,14 +204,15 @@ public:
                     if (lightShape) { // is area light?
                         Normal3f yN;
                         float pWi;
-                        Vector3f d = emitter->sampleSolidAngle(sampler, its.p, yN, pWi);
+                        Vector3f wo = emitter->sampleSolidAngle(sampler, its.p, yN, pWi);
 
-                        Ray3f lightRay(its.p, d, Epsilon, maxt);
+                        Ray3f lightRay(its.p, wo, Epsilon, maxt);
                         Intersection itsLight;
                         bool intersects = scene->rayIntersect(lightRay, itsLight);
                         if (intersects && itsLight.shape->isEmitter()) {
                             Color3f Le = itsLight.shape->getEmitter()->eval();
-                            nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(n));
+							//wi,wo
+                            nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle, its.toLocal(n));
                             nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
 
                             Ld += brdfValue * Le / pWi;
@@ -225,17 +227,18 @@ public:
         Color3f Li(0.0f);
         if(m_samplesFG > 0) {
             for (int i = 0; i < m_samplesFG; ++i) {
-                Vector3f d = Warp::squareToCosineHemisphere(sampler->next2D());
-                float pdf = Warp::squareToCosineHemispherePdf(d);
-                d = its.toWorld(d); // transform to world space so it aligns with the its
-                d.normalize();
-                Ray3f gatherRay(its.p, d, Epsilon, maxt);
+                Vector3f wo = Warp::squareToCosineHemisphere(sampler->next2D());
+                float pdf = Warp::squareToCosineHemispherePdf(wo);
+                wo = its.toWorld(wo); // transform to world space so it aligns with the its
+                wo.normalize();
+                Ray3f gatherRay(its.p, wo, Epsilon, maxt);
 
                 Intersection itsGather;
                 bool intersects = scene->rayIntersect(gatherRay, itsGather);
                 if (intersects && !itsGather.shape->isEmitter()) {
                     Color3f Le = computeLrFromDensityEstimation(gatherRay, itsGather);
-                    nori::BSDFQueryRecord bRec(its.toLocal(d), its.toLocal(-ray.d), nori::ESolidAngle);
+					//wi,wo
+                    nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
                     nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
 
                     Li += brdfValue * Le / pdf;
@@ -285,7 +288,8 @@ public:
         // compute radiance estimate from k nearest photons
         Color3f Lr(0.0f);
         for(int i = 0; i < k; ++i) {
-            BSDFQueryRecord bRec(its.toLocal(-m_photonMap[i].w), its.toLocal(-ray.d), ESolidAngle);
+			//wi,wo
+            BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(-m_photonMap[i].w), ESolidAngle);
             Color3f brdfValue = its.shape->getBSDF()->eval(bRec) /* BRDF * cosTheta */ / Frame::cosTheta(bRec.wo);
             Lr += brdfValue * nearestPhotons[i].phi / (M_PI*radius2);
         }
