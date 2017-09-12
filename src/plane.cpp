@@ -6,6 +6,12 @@ NORI_NAMESPACE_BEGIN
 
 /**
 * \brief Plane
+*
+* Defined by:
+*     - center
+*     - width and height
+      - normalZ (side)
+*
 */
 class Plane : public Shape {
 public:
@@ -41,11 +47,14 @@ public:
 
 	virtual Point3f sample(Sampler* sampler, Normal3f& normal) const override {
 		Point2f sample = sampler->next2D();
-		Vector3f v(sample.x(), sample.y(), 0.0f);
+		Point3f p(sample.x(), sample.y(), 0.0f);
 
-		Point3f y = Vector3f(v.x() * m_width, v.y() * m_height, 0.0f) + m_center;
+		// local space to world space
+		Point3f y = Vector3f(p.x()*m_width, p.y()*m_height, 0.0f);
+		y += m_center;
+		y += Point3f(-m_width/2, -m_height/2, 0); // samples origin are not at 0,0,0
 
-		normal = m_normal; //todo: normal = y - x; normal.normalize();
+		normal = m_normal;
 		return y;
 	}
 
@@ -56,25 +65,30 @@ public:
 	virtual bool rayIntersect(uint32_t index, const Ray3f &ray, float &u, float &v, float &t) const override {
         //see: https://www.cl.cam.ac.uk/teaching/1999/AGraphHCI/SMAG/node2.html#eqn:vectplane
 
-		Vector3f N(m_normal); //plane normal
-		Point3f Q(m_center); //point on the plane
-		Point3f E(ray.o);
+		// in local space
+
+		Vector3f N(-m_normal); //plane normal TODO: not sure why ne need to negate here..
+		Point3f Q(0.0f); //point on the plane
+		Point3f E(ray.o - m_center);
 		Vector3f D(ray.d);
 
 		float nDotD = N.dot(D);
 		if(nDotD <= 1e-6f) return false;
 
 		t = N.dot(Q-E) / nDotD;
-		if(t < 0.0f) return false;
+		const float epsillon = 1e-8f;
+		if (t + epsillon > ray.maxt || t - epsillon <= ray.mint) {
+			return false;
+		}
 
-        Point3f P(ray(t)); //in world
+        Point3f P(ray(t));
 
-        return P.x() >= (-m_width/2 + m_center.x()) && P.x() <= (m_width/2 + m_center.x()) &&
-               P.y() >= (-m_height/2 + m_center.y()) && P.y() <= (m_height/2 + m_center.y());
+        return P.x() >= -m_width/2 && P.x() <= m_width/2 &&
+               P.y() >= -m_height/2 && P.y() <= m_height/2;
 	}
 
 	virtual void computeIntersectionInfo(uint32_t index, const Ray3f &ray, Intersection & its) const override {
-		its.p = ray(its.t) - m_center;
+		its.p = ray(its.t);
 
 		its.geoFrame = Frame(m_normal);
 		its.shFrame = Frame(m_normal);
