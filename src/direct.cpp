@@ -92,7 +92,7 @@ public:
 						Ray3f lightRay(x, wo, Epsilon, maxt);
 						Intersection itsLight;
 						bool intersects = scene->rayIntersect(lightRay, itsLight);
-						if (intersects && itsLight.shape->isEmitter()) {
+						if (intersects && (itsLight.shape->isEmitter() && itsLight.shape == lightShape)) {
 							float cosTheta_i = 1.0; // calculated by BRDF::eval()
 							float cosTheta_o = std::max(0.0f, wo.dot(yN));
 							float G = (cosTheta_i * cosTheta_o) / ((x - y).squaredNorm());
@@ -125,7 +125,7 @@ public:
 						Ray3f lightRay(its.p, wo, Epsilon, maxt);
 						Intersection itsLight;
 						bool intersects = scene->rayIntersect(lightRay, itsLight);
-						if (intersects && itsLight.shape->isEmitter()) {
+						if (intersects && (itsLight.shape->isEmitter() && itsLight.shape == lightShape)) {
 							Color3f Le = itsLight.shape->getEmitter()->eval();
 							//wi,wo
 							nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle, its.toLocal(n));
@@ -154,7 +154,7 @@ public:
                         Ray3f lightRay(its.p, wo, Epsilon, maxt);
                         Intersection itsLight;
                         bool intersects = scene->rayIntersect(lightRay, itsLight);
-                        if (intersects && itsLight.shape->isEmitter()) {
+                        if (intersects && (itsLight.shape->isEmitter() && itsLight.shape == lightShape)) {
                             Color3f Le = itsLight.shape->getEmitter()->eval();
 							//wi,wo
                             nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle, its.toLocal(n));
@@ -165,7 +165,6 @@ public:
 
                             Lr += brdfValue * Le * weight / (pWi * m_emitterSamples);
                         }
-
 					}
 
 				}
