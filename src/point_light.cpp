@@ -13,6 +13,10 @@ public:
         throw NoriException("Unimplemented PointLight::eval() !!!");
     }
 
+    virtual Color3f evalPosition() const override {
+        throw NoriException("Unimplemented PointLight::evalPosition() !!!");
+    }
+
     virtual Point3f sample(Sampler* sampler, Normal3f& normal) const override {
         throw NoriException("Unimplemented PointLight::sample() !!!");
     }
