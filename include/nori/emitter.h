@@ -31,6 +31,7 @@ class Sampler;
 class Emitter : public NoriObject {
 public:
     virtual Color3f eval(const Intersection& its, const Vector3f& d) const = 0;
+    virtual Color3f evalPosition() const = 0; // used by PPM
 
     virtual Point3f sample(Sampler* sampler, Normal3f& normal) const = 0;
     virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi) const = 0;

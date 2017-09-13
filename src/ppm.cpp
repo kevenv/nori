@@ -120,7 +120,7 @@ public:
         p.w.normalize();
 
         // compute power
-        Color3f Le = em.eval(Intersection(), p.w); // todo: not sure about this
+        Color3f Le = em.evalPosition();
         float cosTheta = std::max(0.0f,p.w.dot(n));
         p.phi = Le * cosTheta / (pdfX*pdfW);
 
