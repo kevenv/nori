@@ -22,7 +22,7 @@ public:
     }
 
     /// Return a human-readable summary
-    std::string toString() const {
+    std::string toString() const override {
         return tfm::format(
             "PointLight[\n");
     }

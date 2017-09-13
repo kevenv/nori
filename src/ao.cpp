@@ -57,7 +57,7 @@ public:
         return Color3f(Lr);
     }
 
-    std::string toString() const {
+    std::string toString() const override {
         return tfm::format(
             "AmbientOcclusionIntegrator[\n"
             " samplingMethod = %s\n"

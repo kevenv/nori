@@ -27,7 +27,7 @@ public:
         if (m_tracerType == "explicit") {
             return Li_explicit(scene, sampler, ray, 0);
         }
-        else if (m_tracerType == "implicit") {
+        else { //if (m_tracerType == "implicit") {
             return Li_implicit(scene, sampler, ray, 0);
         }
     }
