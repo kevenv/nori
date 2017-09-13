@@ -31,7 +31,7 @@ Color3f DirectIntegrator::Li(const Scene *scene, Sampler *sampler, const Ray3f &
             return Color3f(0.0f);
 
         if (its.shape->isEmitter()) {
-            return its.shape->getEmitter()->eval();
+            return its.shape->getEmitter()->eval(its, -ray.d);
         }
     }
     else {
@@ -58,7 +58,7 @@ Color3f DirectIntegrator::Li(const Scene *scene, Sampler *sampler, const Ray3f &
             bool intersects = scene->rayIntersect(lightRay, itsLight);
             if (intersects && itsLight.shape->isEmitter()) {
                 const Emitter* emitter = itsLight.shape->getEmitter();
-                Color3f Le = emitter->eval();
+                Color3f Le = emitter->eval(itsLight, wo);
                 //wi,wo
                 nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
                 nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
@@ -84,7 +84,7 @@ Color3f DirectIntegrator::Li(const Scene *scene, Sampler *sampler, const Ray3f &
             bool intersects = scene->rayIntersect(lightRay, itsLight);
             if (intersects && itsLight.shape->isEmitter()) {
                 const Emitter* emitter = itsLight.shape->getEmitter();
-                Color3f Le = emitter->eval();
+                Color3f Le = emitter->eval(itsLight, wo);
                 Lr += brdfValue * Le;
             }
         }
@@ -99,8 +99,6 @@ Color3f DirectIntegrator::Li(const Scene *scene, Sampler *sampler, const Ray3f &
             for (const Emitter* emitter : scene->getEmitters()) {
                 const Shape* lightShape = emitter->getShape();
                 if (lightShape) { // is area light?
-                    Color3f Le = emitter->eval();
-
                     Normal3f yN;
                     Point3f x = its.p;
                     Point3f y = emitter->sample(sampler, yN);
@@ -119,6 +117,8 @@ Color3f DirectIntegrator::Li(const Scene *scene, Sampler *sampler, const Ray3f &
                             //wi,wo
                             nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
                             nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
+
+                            Color3f Le = emitter->eval(itsLight, wo);
 
                             Lr += brdfValue * Le / pdf;
                         }
@@ -145,7 +145,7 @@ Color3f DirectIntegrator::Li(const Scene *scene, Sampler *sampler, const Ray3f &
                     Intersection itsLight;
                     bool intersects = scene->rayIntersect(lightRay, itsLight);
                     if (intersects && (itsLight.shape->isEmitter() && itsLight.shape == lightShape)) {
-                        Color3f Le = itsLight.shape->getEmitter()->eval();
+                        Color3f Le = itsLight.shape->getEmitter()->eval(itsLight, wo);
                         //wi,wo
                         nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
                         nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
@@ -175,7 +175,7 @@ Color3f DirectIntegrator::Li(const Scene *scene, Sampler *sampler, const Ray3f &
                         Intersection itsLight;
                         bool intersects = scene->rayIntersect(lightRay, itsLight);
                         if (intersects && (itsLight.shape->isEmitter() && itsLight.shape == lightShape)) {
-                            Color3f Le = itsLight.shape->getEmitter()->eval();
+                            Color3f Le = itsLight.shape->getEmitter()->eval(itsLight, wo);
                             //wi,wo
                             nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
                             nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
@@ -204,7 +204,7 @@ Color3f DirectIntegrator::Li(const Scene *scene, Sampler *sampler, const Ray3f &
                 bool intersects = scene->rayIntersect(lightRay, itsLight);
                 if (intersects && itsLight.shape->isEmitter()) {
                     const Emitter* emitter = itsLight.shape->getEmitter();
-                    Color3f Le = emitter->eval();
+                    Color3f Le = emitter->eval(itsLight, wo);
 
                     float pdfEmitter; Normal3f yN;
                     emitter->sampleSolidAngle(sampler, its.p, yN, pdfEmitter);

@@ -51,7 +51,7 @@ public:
             }
             // color lights
             else {
-                return Color3f(its.shape->getEmitter()->eval());
+                return Color3f(its.shape->getEmitter()->eval(its, -ray.d));
             }
         }
 
@@ -130,7 +130,7 @@ public:
         if (its.shape->isEmitter()) {
             //direct illumination
             const Emitter* emitter = its.shape->getEmitter();
-            L = emitter->eval();
+            L = emitter->eval(its, wo);
         }
         else {
             //indirect illumination

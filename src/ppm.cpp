@@ -120,7 +120,7 @@ public:
         p.w.normalize();
 
         // compute power
-        Color3f Le = em.eval();
+        Color3f Le = em.eval(Intersection(), p.w); // todo: not sure about this
         float cosTheta = std::max(0.0f,p.w.dot(n));
         p.phi = Le * cosTheta / (pdfX*pdfW);
 
@@ -198,7 +198,7 @@ public:
             return 0.0f;
         }
         if (its.shape->isEmitter()) {
-            return its.shape->getEmitter()->eval();
+            return its.shape->getEmitter()->eval(its, -ray.d);
         }
 
         //return photonMapViewer(ray, its);

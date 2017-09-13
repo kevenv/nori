@@ -9,7 +9,7 @@ public:
         
     }
 
-    virtual Color3f eval() const override {
+    virtual Color3f eval(const Intersection& its, const Vector3f& d) const override {
         throw NoriException("Unimplemented PointLight::eval() !!!");
     }
 

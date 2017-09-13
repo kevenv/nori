@@ -12,7 +12,7 @@ public:
 
     }
 
-    virtual Color3f eval() const override {
+    virtual Color3f eval(const Intersection& its, const Vector3f& d) const override {
         return m_radiance;
     }
 
