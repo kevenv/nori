@@ -72,7 +72,7 @@ public:
                     if (intersects && (itsLight.shape->isEmitter() && itsLight.shape == lightShape)) {
                         Color3f Le = itsLight.shape->getEmitter()->eval();
                         //wi,wo
-                        nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle, its.toLocal(n));
+                        nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
                         nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
 
                         L_dir += brdfValue * Le / pWi;
@@ -96,7 +96,7 @@ public:
                         float pdf = d2 / cosThetaY * pA;
 
                         //wi,wo
-                        nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle, its.toLocal(n));
+                        nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
                         nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
 
                         L_dir += brdfValue * Le / pdf;
@@ -132,7 +132,7 @@ public:
             pWi = INV_TWOPI;
         }
         //wi,wo
-        nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle, its.toLocal(n));
+        nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
         nori::Color3f fr = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
         Color3f L_ind = fr * Li_explicit(scene, sampler, traceRay, ++bounds) / pWi;
         if (m_termination == "russian-roulette") {
@@ -189,7 +189,7 @@ public:
             pWi = INV_TWOPI;
         }
         //wi,wo
-        nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle, its.toLocal(n));
+        nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
         nori::Color3f fr = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
         Color3f Le(0.0f);
         Color3f Lr = fr * L / pWi;

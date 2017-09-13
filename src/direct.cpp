@@ -47,7 +47,7 @@ public:
                     const Emitter* emitter = itsLight.shape->getEmitter();
                     Color3f Le = emitter->eval();
                     //wi,wo
-                    nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle, its.toLocal(n));
+                    nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
                     nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
 
                     Lr += brdfValue * Le / pdf;
@@ -59,7 +59,7 @@ public:
         else if (m_samplingMethod == "brdf") {
 
             for (int i = 0; i < m_emitterSamples; ++i) {
-                nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), Vector3f(0.0f), nori::ESolidAngle, its.toLocal(n));
+                nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), Vector3f(0.0f), nori::ESolidAngle);
                 nori::Color3f brdfValue = its.shape->getBSDF()->sample(bRec, sampler->next2D()); // BRDF / pdf * cosTheta
                 Vector3f wo = its.toWorld(bRec.wo); // transform to world space so it aligns with the its
                 wo.normalize();
@@ -99,7 +99,7 @@ public:
                             float pdf = d2 / cosThetaY * pA;
 
                             //wi,wo
-                            nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle, its.toLocal(n));
+                            nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
                             nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
 
                             Lr += brdfValue * Le / pdf;
@@ -126,7 +126,7 @@ public:
                         if (intersects && (itsLight.shape->isEmitter() && itsLight.shape == lightShape)) {
                             Color3f Le = itsLight.shape->getEmitter()->eval();
                             //wi,wo
-                            nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle, its.toLocal(n));
+                            nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
                             nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
 
                             Lr += brdfValue * Le / pWi;
@@ -155,7 +155,7 @@ public:
                         if (intersects && (itsLight.shape->isEmitter() && itsLight.shape == lightShape)) {
                             Color3f Le = itsLight.shape->getEmitter()->eval();
                             //wi,wo
-                            nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle, its.toLocal(n));
+                            nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
                             nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
 
                             float pdfBrdf = its.shape->getBSDF()->pdf(bRec);
@@ -170,7 +170,7 @@ public:
 
             // BRDF sampling
             for (int i = 0; i < m_brdfSamples; ++i) {
-                nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), Vector3f(0.0f), nori::ESolidAngle, its.toLocal(n));
+                nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), Vector3f(0.0f), nori::ESolidAngle);
                 nori::Color3f brdfValue = its.shape->getBSDF()->sample(bRec, sampler->next2D()); // BRDF / pdf * cosTheta
                 Vector3f wo = its.toWorld(bRec.wo); // transform to world space so it aligns with the its
                 wo.normalize();

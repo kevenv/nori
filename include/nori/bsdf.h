@@ -51,11 +51,6 @@ struct BSDFQueryRecord {
     BSDFQueryRecord(const Vector3f &wi,
             const Vector3f &wo, EMeasure measure)
         : wi(wi), wo(wo), measure(measure) { }
-
-    /// Create a new record for querying the BSDF
-    BSDFQueryRecord(const Vector3f &wi,
-        const Vector3f &wo, EMeasure measure, const Normal3f& N)
-        : wi(wi), wo(wo), measure(measure), N(N) { }
 };
 
 /**

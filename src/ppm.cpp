@@ -228,7 +228,7 @@ public:
                             float pdf = d2 / cosThetaY * pA;
 
                             //wi,wo
-                            nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle, its.toLocal(n));
+                            nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
                             nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
 
                             Ld += brdfValue * Le / pdf;

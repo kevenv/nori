@@ -22,7 +22,7 @@ public:
         Ray3f shadowRay(its.p, light);
         bool visible = !scene->rayIntersect(shadowRay);
         if (visible) {
-            nori::BSDFQueryRecord bRec(its.toLocal(light), its.toLocal(-ray.d), nori::ESolidAngle, its.toLocal(its.shFrame.n));
+            nori::BSDFQueryRecord bRec(its.toLocal(light), its.toLocal(-ray.d), nori::ESolidAngle);
             nori::Color3f color = its.shape->getBSDF()->eval(bRec);
             Normal3f n = its.shFrame.n;
             float L = light.dot(n);
