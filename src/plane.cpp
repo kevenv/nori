@@ -109,6 +109,8 @@ public:
         );
     }
 
+    virtual std::string getType() const override { return "plane"; }
+
 protected:
     Point3f m_center;
     float m_width;

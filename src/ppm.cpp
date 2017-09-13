@@ -98,12 +98,21 @@ public:
         // sample position
         Normal3f n;
         p.x = em.sample(sampler, n);
-        //n = -n; //todo: need -n? w rect light
         float pdfX = 1.0f / em.getShape()->getArea();
 
         // sample direction
-        Vector3f wLoc = Warp::squareToUniformHemisphere(sampler->next2D()); //todo: hemisphere for hemisphere light, cosine for rect light
-        float pdfW = Warp::squareToUniformHemispherePdf(wLoc);
+        Vector3f wLoc;
+        float pdfW;
+        std::string emitterType = em.getShape()->getType();
+        if (emitterType == "plane") { //todo: hack
+            wLoc = Warp::squareToCosineHemisphere(sampler->next2D());
+            pdfW = Warp::squareToCosineHemispherePdf(wLoc);
+        }
+        else if(emitterType == "sphere") {
+            wLoc = Warp::squareToUniformHemisphere(sampler->next2D());
+            pdfW = Warp::squareToUniformHemispherePdf(wLoc);
+        }
+
         Frame N(n);
         p.w = N.toWorld(wLoc);
         p.w.normalize();
@@ -202,20 +211,27 @@ public:
                 for (const Emitter* emitter : scene->getEmitters()) {
                     const Shape* lightShape = emitter->getShape();
                     if (lightShape) { // is area light?
-                        Normal3f yN;
-                        float pWi;
-                        Vector3f wo = emitter->sampleSolidAngle(sampler, its.p, yN, pWi);
+                        Color3f Le = emitter->eval();
 
-                        Ray3f lightRay(its.p, wo, Epsilon, maxt);
+                        Normal3f yN;
+                        Point3f x = its.p;
+                        Point3f y = emitter->sample(sampler, yN);
+                        Vector3f wo = (y - x).normalized();
+
+                        Ray3f lightRay(x, wo, Epsilon, maxt);
                         Intersection itsLight;
                         bool intersects = scene->rayIntersect(lightRay, itsLight);
                         if (intersects && (itsLight.shape->isEmitter() && itsLight.shape == lightShape)) {
-                            Color3f Le = itsLight.shape->getEmitter()->eval();
+                            float pA = 1.0f / lightShape->getArea();
+                            float d2 = (y - x).squaredNorm();
+                            float cosThetaY = std::max(0.0f, (-wo).dot(yN)); //todo: division by zero
+                            float pdf = d2 / cosThetaY * pA;
+
                             //wi,wo
                             nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle, its.toLocal(n));
                             nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
 
-                            Ld += brdfValue * Le / pWi;
+                            Ld += brdfValue * Le / pdf;
                         }
                     }
                 }

@@ -128,6 +128,8 @@ public:
     * */
     virtual EClassType getClassType() const override { return EShape; }
 
+    virtual std::string getType() const { return "shape"; }
+
 protected:
     /// Create an empty shape
     Shape();
@@ -136,6 +138,8 @@ protected:
     BSDF          *m_bsdf = nullptr;      ///< BSDF of the surface
     Emitter       *m_emitter = nullptr;   ///< Associated emitter, if any
     BoundingBox3f  m_bbox;                ///< Bounding box of the shape
+
+    std::string    m_type; //todo: hack
 };
 
 NORI_NAMESPACE_END
