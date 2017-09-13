@@ -5,6 +5,7 @@
 #include <nori/shape.h>
 #include <nori/bsdf.h>
 #include <nori/emitter.h>
+#include <nori/direct.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -16,12 +17,13 @@ public:
         m_terminationProb(props.getFloat("terminationProb", 0.2f)),
         m_terminationBounds(props.getInteger("terminationBounds", 15)),
         m_directSampling(props.getString("directSampling", "area")),
-        m_indirectSampling(props.getString("indirectSampling", "cosine"))
+        m_indirectSampling(props.getString("indirectSampling", "cosine")),
+        m_directIntegrator(m_directSampling, 1, 0)
     {
 
     }
 
-    Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
+    Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray, const Intersection* _its) const {
         if (m_tracerType == "explicit") {
             return Li_explicit(scene, sampler, ray, 0);
         }
@@ -57,53 +59,7 @@ public:
         float maxt = scene->getBoundingBox().getExtents().norm();
 
         // direct illumination
-        Color3f L_dir(0.0f);
-        for (const Emitter* emitter : scene->getEmitters()) {
-            const Shape* lightShape = emitter->getShape();
-            if (lightShape) { // is area light?
-                if (m_directSampling == "solidangle") {
-                    Normal3f yN;
-                    float pWi;
-                    Vector3f wo = emitter->sampleSolidAngle(sampler, its.p, yN, pWi);
-
-                    Ray3f lightRay(its.p, wo, Epsilon, maxt);
-                    Intersection itsLight;
-                    bool intersects = scene->rayIntersect(lightRay, itsLight);
-                    if (intersects && (itsLight.shape->isEmitter() && itsLight.shape == lightShape)) {
-                        Color3f Le = itsLight.shape->getEmitter()->eval();
-                        //wi,wo
-                        nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
-                        nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
-
-                        L_dir += brdfValue * Le / pWi;
-                    }
-                }
-                else if (m_directSampling == "area") {
-                    Color3f Le = emitter->eval();
-
-                    Normal3f yN;
-                    Point3f x = its.p;
-                    Point3f y = emitter->sample(sampler, yN);
-                    Vector3f wo = (y - x).normalized();
-
-                    Ray3f lightRay(x, wo, Epsilon, maxt);
-                    Intersection itsLight;
-                    bool intersects = scene->rayIntersect(lightRay, itsLight);
-                    if (intersects && (itsLight.shape->isEmitter() && itsLight.shape == lightShape)) {
-                        float pA = 1.0f / lightShape->getArea();
-                        float d2 = (y - x).squaredNorm();
-                        float cosThetaY = std::max(0.0f, (-wo).dot(yN)); //todo: division by zero
-                        float pdf = d2 / cosThetaY * pA;
-
-                        //wi,wo
-                        nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
-                        nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
-
-                        L_dir += brdfValue * Le / pdf;
-                    }
-                }
-            }
-        }
+        Color3f L_dir = m_directIntegrator.Li(scene, sampler, ray, &its);
         
         // indirect illumination
 
@@ -225,6 +181,8 @@ private:
     const int m_terminationBounds;
     const std::string m_directSampling;
     const std::string m_indirectSampling;
+
+    DirectIntegrator m_directIntegrator;
 };
 
 NORI_REGISTER_CLASS(PathTracer, "path_tracer");

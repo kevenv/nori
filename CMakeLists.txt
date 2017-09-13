@@ -51,6 +51,7 @@ add_executable(nori
   include/nori/dpdf.h
   include/nori/frame.h
   include/nori/integrator.h
+  include/nori/direct.h
   include/nori/emitter.h
   include/nori/mesh.h
   include/nori/shape.h

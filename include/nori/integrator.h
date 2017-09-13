@@ -19,6 +19,7 @@
 #pragma once
 
 #include <nori/object.h>
+#include <nori/shape.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -57,7 +58,7 @@ public:
      * \return
      *    A (usually) unbiased estimate of the radiance in this direction
      */
-    virtual Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const = 0;
+    virtual Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray, const Intersection* _its = nullptr) const = 0;
 
     /**
      * \brief Return the type of object (i.e. Mesh/BSDF/etc.) 

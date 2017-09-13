@@ -5,6 +5,7 @@
 #include <nori/bsdf.h>
 #include <nori/emitter.h>
 #include <nori/kdtree.h>
+#include <nori/direct.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -16,7 +17,7 @@ struct Photon {
 
 class PPM : public Integrator {
 public:
-    PPM(const PropertyList &props):
+    PPM(const PropertyList &props) :
         m_photonCount(props.getInteger("photonCount", 100)),
         m_kPhotons(props.getInteger("kPhotons", 10)),
         m_radius2(props.getFloat("radius2", 10.0f)),
@@ -25,7 +26,8 @@ public:
         m_knnMethodStr(props.getString("knnMethod", "radius")),
         m_knnMethod(KNN_METHOD_RADIUS),
         m_currentPhotonCount(0),
-        m_emittedPhotonCount(0)
+        m_emittedPhotonCount(0),
+        m_directIntegrator("area", m_samplesDI, 0)
     {
         m_progressive = static_cast<bool>(props.getInteger("progressive",1));
         m_iterations = props.getInteger("iterations", 1);
@@ -189,7 +191,7 @@ public:
         }
     }
 
-    Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray) const override {
+    Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray, const Intersection* _its) const override {
         /* Find the surface that is visible in the requested direction */
         Intersection its;
         if (!scene->rayIntersect(ray, its)) {
@@ -205,39 +207,7 @@ public:
         float maxt = scene->getBoundingBox().getExtents().norm();
 
         // DI
-        Color3f Ld(0.0f);
-        if (m_samplesDI > 0) {
-            for (int i = 0; i < m_samplesDI; ++i) {
-                for (const Emitter* emitter : scene->getEmitters()) {
-                    const Shape* lightShape = emitter->getShape();
-                    if (lightShape) { // is area light?
-                        Color3f Le = emitter->eval();
-
-                        Normal3f yN;
-                        Point3f x = its.p;
-                        Point3f y = emitter->sample(sampler, yN);
-                        Vector3f wo = (y - x).normalized();
-
-                        Ray3f lightRay(x, wo, Epsilon, maxt);
-                        Intersection itsLight;
-                        bool intersects = scene->rayIntersect(lightRay, itsLight);
-                        if (intersects && (itsLight.shape->isEmitter() && itsLight.shape == lightShape)) {
-                            float pA = 1.0f / lightShape->getArea();
-                            float d2 = (y - x).squaredNorm();
-                            float cosThetaY = std::max(0.0f, (-wo).dot(yN)); //todo: division by zero
-                            float pdf = d2 / cosThetaY * pA;
-
-                            //wi,wo
-                            nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
-                            nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
-
-                            Ld += brdfValue * Le / pdf;
-                        }
-                    }
-                }
-            }
-            Ld *= 1.0f / m_samplesDI;
-        }
+        Color3f Ld = m_directIntegrator.Li(scene, sampler, ray, &its);
 
         // GI using PM w final gathering (FG)
         Color3f Li(0.0f);
@@ -372,6 +342,8 @@ private:
     PointKDTree<PhotonKDTreeNode> m_KDTree;
 
     int m_emittedPhotonCount;
+
+    DirectIntegrator m_directIntegrator;
 };
 
 NORI_REGISTER_CLASS(PPM, "ppm");
