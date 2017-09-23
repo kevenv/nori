@@ -1,0 +1,122 @@
+<scene>
+    <!-- Independent sample generator, user-selected samples per pixel -->
+    <sampler type="independent">
+        <integer name="sampleCount" value="128"/>
+    </sampler>
+
+    <!-- Use a direct illumination integrator -->
+    <integrator type="path_tracer">
+        <string name="tracerType" value="explicit"/>
+        <string name="termination" value="russian-roulette"/>
+        <float name="terminationProb" value="0.3"/>
+        <string name="directSampling" value="solidangle"/>
+        <string name="indirectSampling" value="cosine"/>
+
+        <string name="samplingMethod" value="solidangle"/>
+        <integer name="emitterSamples" value="32"/>
+        <integer name="bsdfSamples" value="0"/>
+    </integrator>
+
+    <!-- scene light -->
+    <shape type="sphere">
+        <point name="center" value="1,-1.5,1.75"/>
+        <float name="radius" value="0.1"/>
+        <emitter type="area">
+            <color name="radiance" value="30,30,30"/>
+        </emitter>
+    </shape>
+    
+    <!-- disco lights -->
+    <shape type="sphere">
+        <point name="center" value="0,0.2,0.5"/>
+        <float name="radius" value="0.1"/>
+        <emitter type="area">
+            <color name="radiance" value="260,960,440"/>
+        </emitter>
+    </shape>
+    <shape type="sphere">
+        <point name="center" value="-0.2,0,0.8"/>
+        <float name="radius" value="0.1"/>
+        <emitter type="area">
+            <color name="radiance" value="960,260,730"/>
+        </emitter>
+    </shape>
+    <shape type="sphere">
+        <point name="center" value="0,0,0"/>
+        <float name="radius" value="0.1"/>
+        <emitter type="area">
+            <color name="radiance" value="0,1000,1000"/>
+        </emitter>
+    </shape>
+
+    <!-- disco ball -->
+    <shape type="obj">
+        <string name="filename" value="disco.obj"/>
+        <bsdf type="diffuse"/>
+        <transform name="toWorld">
+            <scale value="0.2,0.2,0.2"/>
+            <rotate axis="1,0,0" angle="90"/>
+            <translate value="0,0,0"/>
+        </transform>
+    </shape>
+
+    <!-- Cornell box -->
+    <shape type="obj">
+        <string name="filename" value="../cornell-box/cornellbox_walls.obj"/>
+        <bsdf type="diffuse">
+            <color name="albedo" value="0.725,0.71,0.68"/>
+        </bsdf>
+        <transform name="toWorld">
+            <scale value="2.5,2.5,2.5"/>
+            <translate value="0,0.3,-2"/>
+        </transform>
+    </shape>
+    <shape type="obj">
+        <string name="filename" value="../cornell-box/cornellbox_lwall.obj"/>
+        <bsdf type="diffuse">
+            <color name="albedo" value="0.63,0.065,0.05"/>
+        </bsdf>
+        <transform name="toWorld">
+            <scale value="2.5,2.5,2.5"/>
+            <translate value="0,0.3,-2"/>
+        </transform>
+    </shape>
+    <shape type="obj">
+        <string name="filename" value="../cornell-box/cornellbox_rwall.obj"/>
+        <bsdf type="diffuse">
+            <color name="albedo" value="0.14,0.45,0.091"/>
+        </bsdf>
+        <transform name="toWorld">
+            <scale value="2.5,2.5,2.5"/>
+            <translate value="0,0.3,-2"/>
+        </transform>
+    </shape>
+
+    <!-- Ground plane -->
+    <!--
+    <shape type="obj">
+        <string name="filename" value="../plane.obj"/>
+        <bsdf type="diffuse"/>
+        <transform name="toWorld">
+            <scale value="100,1,100"/>
+            <rotate axis="1,0,0" angle="90"/>
+            <translate value="0,0,-2"/>
+        </transform>
+    </shape>
+    -->
+
+    <!-- Render the scene as viewed by a perspective camera -->
+    <camera type="perspective">
+        <transform name="toWorld">
+            <lookat target="0,0,0" origin="0,-8,2.5" up="0,0,1"/>
+            <!--<lookat target="0,0,0" origin="0,0.4,5.5" up="0,0,1"/>-->
+        </transform>
+
+        <!-- Field of view: 40 degrees -->
+        <float name="fov" value="40"/>
+
+        <!-- 768 x 768 pixels -->
+        <integer name="width" value="500"/>
+        <integer name="height" value="500"/>
+    </camera>
+</scene>
