@@ -9,8 +9,6 @@
     </sampler>
 
     <integrator type="direct">
-        <integer name="emitterSamples" value="128"/>
-
         <string name="samplingMethod" value="mis"/>
         <integer name="emitterSamples" value="128"/>
         <integer name="brdfSamples" value="128"/>
@@ -97,7 +95,7 @@
 
         <bsdf type="phong">
             <color name="diffuseReflectance" value="0.07,0.09,0.13"/>
-            <color name="specularReflectance" value="1,1,1"/>
+            <color name="specularReflectance" value="0.93,0.91,0.87"/>
             <float name="shininess" value="10000"/>
         </bsdf>
     </shape>
@@ -107,7 +105,7 @@
 
         <bsdf type="phong">
             <color name="diffuseReflectance" value="0.07,0.09,0.13"/>
-            <color name="specularReflectance" value="1,1,1"/>
+            <color name="specularReflectance" value="0.93,0.91,0.87"/>
             <float name="shininess" value="1000"/>
         </bsdf>
     </shape>
@@ -117,7 +115,7 @@
 
         <bsdf type="phong">
             <color name="diffuseReflectance" value="0.07,0.09,0.13"/>
-            <color name="specularReflectance" value="1,1,1"/>
+            <color name="specularReflectance" value="0.93,0.91,0.87"/>
             <float name="shininess" value="100"/>
         </bsdf>
     </shape>
@@ -127,7 +125,7 @@
 
         <bsdf type="phong">
             <color name="diffuseReflectance" value="0.07,0.09,0.13"/>
-            <color name="specularReflectance" value="1,1,1"/>
+            <color name="specularReflectance" value="0.93,0.91,0.87"/>
             <float name="shininess" value="80"/>
         </bsdf>
     </shape>

@@ -28,8 +28,8 @@
         <float name="radius" value="1"/>
         <bsdf type="phong">
             <float name="shininess" value="10"/>
-            <color name="diffuseReflectance" value="1,0,0"/>
-            <color name="specularReflectance" value="1,1,1"/>
+            <color name="diffuseReflectance" value="0.5,0,0"/>
+            <color name="specularReflectance" value="0.5,1,1"/>
         </bsdf>
     </shape>
 
