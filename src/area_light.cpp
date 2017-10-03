@@ -24,8 +24,8 @@ public:
         return m_shape->sample(sampler, normal);
     }
 
-    virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi) const override {
-        return m_shape->sampleSolidAngle(sampler, x, normal, pWi);
+    virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi, Point3f& y) const override {
+        return m_shape->sampleSolidAngle(sampler, x, normal, pWi, y);
     }
 
     /// Return a human-readable summary

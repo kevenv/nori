@@ -142,7 +142,7 @@ Point3f Mesh::sample(Sampler* sampler, Normal3f& normal) const {
     throw NoriException("Unimplemented Mesh::sample() !!!");
 }
 
-Vector3f Mesh::sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi) const {
+Vector3f Mesh::sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi, Point3f& y) const {
     throw NoriException("Unimplemented Mesh::sampleSolidAngle() !!!");
 }
 

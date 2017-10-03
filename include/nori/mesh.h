@@ -56,7 +56,7 @@ public:
     virtual float getArea() const override;
 
     virtual Point3f sample(Sampler* sampler, Normal3f& normal) const override;
-    virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi) const override;
+    virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi, Point3f& y) const override;
 
     /** \brief Ray-triangle intersection test
      *

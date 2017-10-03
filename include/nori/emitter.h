@@ -34,7 +34,7 @@ public:
     virtual Color3f evalPosition() const = 0; // used by PPM
 
     virtual Point3f sample(Sampler* sampler, Normal3f& normal) const = 0;
-    virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi) const = 0;
+    virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi, Point3f& y) const = 0;
 
     const Shape* getShape() const { return m_shape; }
     void setShape(Shape* shape) { m_shape = shape; }

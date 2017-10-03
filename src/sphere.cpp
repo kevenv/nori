@@ -46,7 +46,7 @@ public:
         return y;
     }
 
-    virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi) const override {
+    virtual Vector3f sampleSolidAngle(Sampler* sampler, Point3f& x, Normal3f& normal, float& pWi, Point3f& y) const override {
         float r = m_radius;
         Point3f c(m_center);
         Vector3f cx(c - x);
@@ -65,9 +65,9 @@ public:
         float sinAlpha = std::sqrt(std::max(0.0f, 1.0f - cosAlpha*cosAlpha));
 
         // spherical direction
-        Vector3f y(sinAlpha * std::cos(phi), sinAlpha * std::sin(phi), cosTheta);
-        normal = y;
-        y = y*r + c; //to world
+        Vector3f y_(sinAlpha * std::cos(phi), sinAlpha * std::sin(phi), cosTheta);
+        normal = y_;
+        y = y_*r + c; //to world
 
         pWi = Warp::squareToUniformConePdf(cosThetaMax);
 

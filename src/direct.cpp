@@ -137,9 +137,10 @@ Color3f DirectIntegrator::Li(const Scene *scene, Sampler *sampler, const Ray3f &
             for (const Emitter* emitter : scene->getEmitters()) {
                 const Shape* lightShape = emitter->getShape();
                 if (lightShape) { // is area light?
+                    Point3f y;
                     Normal3f yN;
                     float pWi;
-                    Vector3f wo = emitter->sampleSolidAngle(sampler, its.p, yN, pWi);
+                    Vector3f wo = emitter->sampleSolidAngle(sampler, its.p, yN, pWi, y);
                         
                     Ray3f lightRay(its.p, wo, Epsilon, maxt);
                     Intersection itsLight;
@@ -167,9 +168,10 @@ Color3f DirectIntegrator::Li(const Scene *scene, Sampler *sampler, const Ray3f &
                 if (lightShape) { // is area light?
 
                     for (int i = 0; i < m_emitterSamples; ++i) {
+                        Point3f y;
                         Normal3f yN;
                         float pWi;
-                        Vector3f wo = emitter->sampleSolidAngle(sampler, its.p, yN, pWi);
+                        Vector3f wo = emitter->sampleSolidAngle(sampler, its.p, yN, pWi, y);
 
                         Ray3f lightRay(its.p, wo, Epsilon, maxt);
                         Intersection itsLight;
@@ -206,8 +208,8 @@ Color3f DirectIntegrator::Li(const Scene *scene, Sampler *sampler, const Ray3f &
                     const Emitter* emitter = itsLight.shape->getEmitter();
                     Color3f Le = emitter->eval(itsLight, wo);
 
-                    float pdfEmitter; Normal3f yN;
-                    emitter->sampleSolidAngle(sampler, its.p, yN, pdfEmitter);
+                    float pdfEmitter; Normal3f yN; Point3f y;
+                    emitter->sampleSolidAngle(sampler, its.p, yN, pdfEmitter, y);
                     float weight = balanceHeuristic(m_brdfSamples, its.shape->getBSDF()->pdf(bRec), m_emitterSamples, pdfEmitter);
 
                     Lr += brdfValue * Le * weight / m_brdfSamples;
