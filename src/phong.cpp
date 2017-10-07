@@ -15,6 +15,18 @@ public:
         m_diffuseReflectance(propList.getColor("diffuseReflectance", Color3f(1.0f,1.0f,1.0f))),
         m_specularReflectance(propList.getColor("specularReflectance", Color3f(1.0f, 1.0f, 1.0f)))
     {
+        // ensure energy conservation
+        // kd + ks <= 1
+        const float max = 1.0f;
+        Color3f tmp(m_diffuseReflectance + m_specularReflectance);
+        float actualMax = tmp.max();
+        float scale = 1.0f;
+        if(actualMax > max) {
+            scale = 0.99f * (max / actualMax);
+        }
+        m_diffuseReflectance *= scale;
+        m_specularReflectance *= scale;
+
         float specAvg = m_specularReflectance.getLuminance();
         float diffAvg = m_diffuseReflectance.getLuminance();
         m_specularSamplingWeight = specAvg / (specAvg + diffAvg);
@@ -125,8 +137,8 @@ public:
 
 private:
     const float m_shininess;
-    const Color3f m_diffuseReflectance;
-    const Color3f m_specularReflectance;
+    Color3f m_diffuseReflectance;
+    Color3f m_specularReflectance;
     float m_specularSamplingWeight;
 };
 

@@ -62,6 +62,18 @@ public:
     Color3f clamp() const { return Color3f(std::max(r(), 0.0f),
         std::max(g(), 0.0f), std::max(b(), 0.0f)); }
 
+    float max() const {
+        if(r() > g() && r() > b()) {
+            return r();
+        }
+        else if(g() > r() && g() > b()) {
+            return g();
+        }
+        else { // b > r && b > g
+            return b();
+        }
+    }
+
     /// Check if the color vector contains a NaN/Inf/negative value
     bool isValid() const;
 
