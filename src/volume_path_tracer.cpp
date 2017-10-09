@@ -73,7 +73,7 @@ public:
             return Li_explicit(scene, sampler, ray);
         }
         else { //if (m_tracerType == "implicit") {
-            return 0.0f;
+            return Li_implicit(scene, sampler, ray);
         }
     }
 
@@ -88,6 +88,7 @@ public:
         float t = distSample(m_distanceSampling, maxt, sampler);
         float pdfT = distPdf(t, m_distanceSampling, maxt);
 
+        // Emission - direct light hit (explicit)
         Intersection its;
         if (scene->rayIntersect(ray, its) && its.shape->isEmitter()) {
             float s = (x-its.p).norm();
@@ -144,6 +145,57 @@ public:
         Color3f Ls = fp * Li;
 
         Color3f Lr = Tr(x, xt) * m_sigmaS * Ls / pdfT;
+        return Lr;
+    }
+
+    Color3f Li_implicit(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
+        //float maxt = scene->getBoundingBox().getExtents().norm();
+        float maxt = 100.0f;
+
+        Point3f x = ray.o;
+        Vector3f wi = ray.d;
+
+        // sample distance (t)
+        float t = distSample(m_distanceSampling, maxt, sampler);
+        float pdfT = distPdf(t, m_distanceSampling, maxt);
+
+        // Emission - direct light hit (explicit)
+        Intersection its;
+        if (scene->rayIntersect(ray, its) && its.shape->isEmitter()) {
+            float s = (x - its.p).norm();
+            if (t >= s) {
+                float pdfT = distPdf_failure(s, m_distanceSampling, maxt);
+                Color3f Le = Tr(x, its.p) * its.shape->getEmitter()->eval(its, -ray.d) / pdfT;
+                return Le;
+            }
+        }
+
+        // calc point xt
+        Point3f xt = x + t*wi;
+
+        // direct illumination
+        Color3f Lr(0.0f);
+
+        Vector3f wo = Warp::squareToUniformSphere(sampler->next2D());
+        float pdf = Warp::squareToUniformSpherePdf(wo);
+
+        Ray3f lightRay(xt, wo, Epsilon, maxt);
+        Intersection itsLight;
+        bool intersects = scene->rayIntersect(lightRay, itsLight);
+        if (intersects && (itsLight.shape->isEmitter())) {
+            Point3f xe = itsLight.p;
+            Color3f Le = itsLight.shape->getEmitter()->eval(itsLight, wo) / pdf;
+
+            // calc Li
+            Color3f Li = Tr(xt, xe) * Le;
+
+            // calc Ls
+            float fp = 1.0f / (4.0f * M_PI);
+            Color3f Ls = fp * Li;
+
+            Lr = Tr(x, xt) * m_sigmaS * Ls / pdfT;
+        }
+
         return Lr;
     }
 
