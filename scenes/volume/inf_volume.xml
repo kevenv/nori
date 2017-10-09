@@ -5,6 +5,7 @@
 
     <integrator type="volumePT">
         <string name="tracerType" value="explicit"/>
+        <string name="distanceSampling" value="transmittance"/>
         <float name="sigmaA" value="0.0"/>
         <float name="sigmaS" value="0.8"/>
         <!--

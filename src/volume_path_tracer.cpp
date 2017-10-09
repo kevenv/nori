@@ -16,6 +16,7 @@ public:
         m_termination(props.getString("termination", "russian-roulette")),
         m_terminationProb(props.getFloat("terminationProb", 0.2f)),
         m_terminationBounds(props.getInteger("terminationBounds", 15)),
+        m_distanceSampling(props.getString("distanceSampling", "transmittance")),
         m_sigmaA(props.getFloat("sigmaA", 0.1f)),
         m_sigmaS(props.getFloat("sigmaS", 0.5f)),
         m_sigmaT(m_sigmaA + m_sigmaS)
@@ -25,6 +26,33 @@ public:
 
     float Tr(const nori::Point3f& x, const nori::Point3f& y) const {
         return std::exp( -m_sigmaT * (x - y).norm() );
+    }
+
+    float distSample(const std::string& method, float tmax, Sampler* sampler) const {
+        if (method == "uniform") {
+            return sampler->next1D() * tmax;
+        }
+        else { // method == "transmittance"
+            return -std::log(1 - sampler->next1D()) / m_sigmaT;
+        }
+    }
+
+    float distPdf(float t, const std::string& method, float tmax) const {
+        if (method == "uniform") {
+            return 1.0f / tmax;
+        }
+        else { // method == "transmittance"
+            return m_sigmaT * std::exp(-m_sigmaT*t);
+        }
+    }
+
+    float distPdf_failure(float s, const std::string& method, float tmax) const {
+        if (method == "uniform") {
+            return 1.0f / s;
+        }
+        else { // method == "transmittance"
+            return std::exp(-m_sigmaT*s);
+        }
     }
 
     /*
@@ -50,20 +78,22 @@ public:
     }
 
     Color3f Li_explicit(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
-        float maxt = scene->getBoundingBox().getExtents().norm();
+        //float maxt = scene->getBoundingBox().getExtents().norm();
+        float maxt = 100.0f;
+        
         Point3f x = ray.o;
         Vector3f wi = ray.d;
 
         // sample distance (t)
-        float t = -std::log(1 - sampler->next1D()) / m_sigmaT;
-        float pdfT = m_sigmaT * std::exp(-m_sigmaT*t);
+        float t = distSample(m_distanceSampling, maxt, sampler);
+        float pdfT = distPdf(t, m_distanceSampling, maxt);
 
         Intersection its;
         if (scene->rayIntersect(ray, its) && its.shape->isEmitter()) {
-            float tmax = (x-its.p).norm();
-            if(t >= tmax) {
-                float pdf = std::exp(-m_sigmaT * tmax);
-                Color3f Le = Tr(x,its.p) * its.shape->getEmitter()->eval(its, -ray.d) / pdf;
+            float s = (x-its.p).norm();
+            if(t >= s) {
+                float pdfT = distPdf_failure(s, m_distanceSampling, maxt);
+                Color3f Le = Tr(x,its.p) * its.shape->getEmitter()->eval(its, -ray.d) / pdfT;
                 return Le;
             }
         }
@@ -124,6 +154,7 @@ public:
             " termination = %s\n"
             " terminationProb = %d\n"
             " terminationBounds = %d\n"
+            " distanceSampling = %s\n"
             " sigmaA = %d\n"
             " sigmaS = %d\n"
             " sigmaT = %d\n"
@@ -132,6 +163,7 @@ public:
             m_termination,
             m_terminationProb,
             m_terminationBounds,
+            m_distanceSampling,
             m_sigmaA,
             m_sigmaS,
             m_sigmaT
@@ -143,6 +175,7 @@ private:
     const std::string m_termination;
     const float m_terminationProb;
     const int m_terminationBounds;
+    const std::string m_distanceSampling;
     const float m_sigmaA;
     const float m_sigmaS;
     const float m_sigmaT;
