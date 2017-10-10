@@ -27,8 +27,11 @@ public:
         if (m_tracerType == "explicit") {
             return Li_explicit(scene, sampler, ray, 0);
         }
-        else { // if (m_tracerType == "implicit") {
+        else if (m_tracerType == "implicit") {
             return Li_implicit(scene, sampler, ray, 0);
+        }
+        else { //if (m_tracerType == "implicit-exp") {
+            return Li_implicit_exp(scene, sampler, ray, 0);
         }
     }
 
@@ -138,6 +141,69 @@ public:
         Color3f Lr = fr * L / pdf;
         if (m_termination == "russian-roulette") {
             Lr /= (1 - m_terminationProb);
+        }
+
+        Color3f Le(0.0f);
+        return Le + Lr;
+    }
+
+    Color3f Li_implicit_exp(const Scene *scene, Sampler *sampler, const Ray3f &ray, int bounds) const {
+        Intersection its;
+        if (!scene->rayIntersect(ray, its))
+            return Color3f(0.0f);
+
+        // emission - direct light hit (explicit)
+        if (bounds == 0 && its.shape->isEmitter()) {
+            return Color3f(its.shape->getEmitter()->eval(its, -ray.d));
+        }
+
+        if (m_termination == "russian-roulette") {
+            if (sampler->next1D() <= m_terminationProb) return Color3f(0.0f);
+        }
+        if (m_termination == "path-depth") {
+            if (bounds >= m_terminationBounds) return Color3f(0.0f);
+        }
+
+        Normal3f n = its.shFrame.n;
+        float maxt = scene->getBoundingBox().getExtents().norm();
+
+        Color3f Lr(0.0f);
+
+        // cast a random ray
+        Vector3f wo;
+        float pdf;
+        if (m_indirectSampling == "cosine") {
+            wo = Warp::squareToCosineHemisphere(sampler->next2D());
+            pdf = Warp::squareToCosineHemispherePdf(wo);
+        }
+        else if (m_indirectSampling == "uniform") {
+            wo = Warp::squareToUniformHemisphere(sampler->next2D());
+            pdf = Warp::squareToUniformHemispherePdf(wo);
+        }
+        wo = its.toWorld(wo); // transform to world space so it aligns with the its
+        wo.normalize();
+        Ray3f traceRay(its.p, wo, Epsilon, maxt);
+
+        Intersection itsTrace;
+        if (scene->rayIntersect(traceRay, itsTrace)) {
+            Color3f L(0.0f);
+            if (itsTrace.shape->isEmitter()) {
+                //direct illumination
+                const Emitter* emitter = itsTrace.shape->getEmitter();
+                L = emitter->eval(itsTrace, wo);
+            }
+            else {
+                //indirect illumination
+                L = Li_implicit(scene, sampler, traceRay, ++bounds);
+            }
+
+            //wi,wo
+            nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
+            nori::Color3f fr = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
+            Lr = fr * L / pdf;
+            if (m_termination == "russian-roulette") {
+                Lr /= (1 - m_terminationProb);
+            }
         }
 
         Color3f Le(0.0f);
