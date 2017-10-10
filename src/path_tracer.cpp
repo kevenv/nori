@@ -27,32 +27,31 @@ public:
         if (m_tracerType == "explicit") {
             return Li_explicit(scene, sampler, ray, 0);
         }
-        else { //if (m_tracerType == "implicit") {
+        else { // if (m_tracerType == "implicit") {
             return Li_implicit(scene, sampler, ray, 0);
         }
     }
 
     Color3f Li_explicit(const Scene *scene, Sampler *sampler, const Ray3f &ray, int bounds) const {
-        if (m_termination == "russian-roulette") {
-            if (sampler->next1D() <= m_terminationProb) return Color3f(0.0f);
-        }
-        else if(m_termination == "path-depth") {
-            if (bounds > m_terminationBounds) return Color3f(0.0f);
-        }
-
         Intersection its;
         if (!scene->rayIntersect(ray, its))
             return Color3f(0.0f);
+        
+        // emission - direct light hit (explicit)
+        if (bounds == 0 && its.shape->isEmitter()) {
+            return Color3f(its.shape->getEmitter()->eval(its, -ray.d));
+        }
 
-        if(its.shape->isEmitter()) {
-            // stop indirect illumination if hit a light
-            if(bounds > 0) {
-                return Color3f(0.0f);
-            }
-            // color lights
-            else {
-                return Color3f(its.shape->getEmitter()->eval(its, -ray.d));
-            }
+        // stop indirect illumination if hit a light
+        if (bounds > 1 && its.shape->isEmitter()) {
+            return Color3f(0.0f);
+        }
+
+        if (m_termination == "russian-roulette") {
+            if (sampler->next1D() <= m_terminationProb) return Color3f(0.0f);
+        }
+        else if (m_termination == "path-depth") {
+            if (bounds >= m_terminationBounds) return Color3f(0.0f);
         }
 
         Normal3f n = its.shFrame.n;
