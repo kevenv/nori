@@ -95,16 +95,21 @@ public:
     }
 
     Color3f Li_implicit(const Scene *scene, Sampler *sampler, const Ray3f &ray, int bounds) const {
+        Intersection its;
+        if (!scene->rayIntersect(ray, its))
+            return Color3f(0.0f);
+
+        // direct illumination / emission (implicit)
+        if (its.shape->isEmitter()) {
+            return Color3f(its.shape->getEmitter()->eval(its, -ray.d));
+        }
+
         if (m_termination == "russian-roulette") {
             if (sampler->next1D() <= m_terminationProb) return Color3f(0.0f);
         }
         else if (m_termination == "path-depth") {
-            if (bounds > m_terminationBounds) return Color3f(0.0f);
+            if (bounds >= m_terminationBounds) return Color3f(0.0f);
         }
-
-        Intersection its;
-        if (!scene->rayIntersect(ray, its))
-            return Color3f(0.0f);
 
         Normal3f n = its.shFrame.n;
         float maxt = scene->getBoundingBox().getExtents().norm();
@@ -122,27 +127,20 @@ public:
         }
         wo = its.toWorld(wo); // transform to world space so it aligns with the its
         wo.normalize();
-        
-        nori::Color3f L(0.0f);
-        if (its.shape->isEmitter()) {
-            //direct illumination
-            const Emitter* emitter = its.shape->getEmitter();
-            L = emitter->eval(its, wo);
-        }
-        else {
-            //indirect illumination
-            Ray3f traceRay(its.p, wo, Epsilon, maxt);
-            L = Li_implicit(scene, sampler, traceRay, ++bounds);
-        }
+        Ray3f traceRay(its.p, wo, Epsilon, maxt);
+
+        // indirect illumination
+        Color3f L = Li_implicit(scene, sampler, traceRay, ++bounds);
 
         //wi,wo
         nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
         nori::Color3f fr = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
-        Color3f Le(0.0f);
         Color3f Lr = fr * L / pdf;
         if (m_termination == "russian-roulette") {
             Lr /= (1 - m_terminationProb);
         }
+
+        Color3f Le(0.0f);
         return Le + Lr;
     }
 
