@@ -65,32 +65,28 @@ public:
 
         // cast a random ray
         Vector3f wo;
+        float pdf;
         Ray3f traceRay;
         // avoid double counting DI in ID
         Intersection itsTmp;
         do {
             if (m_indirectSampling == "cosine") {
                 wo = Warp::squareToCosineHemisphere(sampler->next2D());
+                pdf = Warp::squareToCosineHemispherePdf(wo);
             }
             else if (m_indirectSampling == "uniform") {
                 wo = Warp::squareToUniformHemisphere(sampler->next2D());
+                pdf = Warp::squareToUniformHemispherePdf(wo);
             }
             wo = its.toWorld(wo); // transform to world space so it aligns with the its
             wo.normalize();
             traceRay = Ray3f(its.p, wo, Epsilon, maxt);
         } while(scene->rayIntersect(traceRay, itsTmp) && itsTmp.shape->isEmitter());
 
-        float pWi;
-        if (m_indirectSampling == "cosine") {
-            pWi = INV_PI;
-        }
-        else if (m_indirectSampling == "uniform") {
-            pWi = INV_TWOPI;
-        }
         //wi,wo
         nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
         nori::Color3f fr = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
-        Color3f L_ind = fr * Li_explicit(scene, sampler, traceRay, ++bounds) / pWi;
+        Color3f L_ind = fr * Li_explicit(scene, sampler, traceRay, ++bounds) / pdf;
         if (m_termination == "russian-roulette") {
             L_ind /= (1 - m_terminationProb);
         }
@@ -116,16 +112,18 @@ public:
 
         // cast a random ray
         Vector3f wo;
+        float pdf;
         if (m_indirectSampling == "cosine") {
             wo = Warp::squareToCosineHemisphere(sampler->next2D());
+            pdf = Warp::squareToCosineHemispherePdf(wo);
         }
         else if (m_indirectSampling == "uniform") {
             wo = Warp::squareToUniformHemisphere(sampler->next2D());
+            pdf = Warp::squareToUniformHemispherePdf(wo);
         }
         wo = its.toWorld(wo); // transform to world space so it aligns with the its
         wo.normalize();
-        Ray3f traceRay(its.p, wo, Epsilon, maxt);
-
+        
         nori::Color3f L(0.0f);
         if (its.shape->isEmitter()) {
             //direct illumination
@@ -134,21 +132,15 @@ public:
         }
         else {
             //indirect illumination
+            Ray3f traceRay(its.p, wo, Epsilon, maxt);
             L = Li_implicit(scene, sampler, traceRay, ++bounds);
         }
 
-        float pWi;
-        if (m_indirectSampling == "cosine") {
-            pWi = INV_PI;
-        }
-        else if (m_indirectSampling == "uniform") {
-            pWi = INV_TWOPI;
-        }
         //wi,wo
         nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
         nori::Color3f fr = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
         Color3f Le(0.0f);
-        Color3f Lr = fr * L / pWi;
+        Color3f Lr = fr * L / pdf;
         if (m_termination == "russian-roulette") {
             Lr /= (1 - m_terminationProb);
         }
