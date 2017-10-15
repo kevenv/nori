@@ -92,12 +92,13 @@ public:
         nori::BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wo), nori::ESolidAngle);
         nori::Color3f fr = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
         Color3f L_ind = fr * Li_explicit(scene, sampler, traceRay, ++bounds) / pdf;
+        Color3f Lr = L_dir + L_ind;
         if (m_termination == "russian-roulette") {
-            L_ind /= (1 - m_terminationProb);
+            Lr /= (1 - m_terminationProb);
         }
 
         Color3f Le(0.0f);
-        return Le + L_dir + L_ind;
+        return Le + Lr;
     }
 
     Color3f Li_implicit(const Scene *scene, Sampler *sampler, const Ray3f &ray, int bounds) const {
