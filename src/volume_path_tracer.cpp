@@ -63,21 +63,28 @@ public:
         PDF = 1 / 4pi
     - monochromatic
     - no surfaces
-    - single scattering
+    - multiple scattering
         w NEE
         1 x area light (area sampling)
     > in-scattering (3rd part of VRE)
     */
     Color3f Li(const Scene *scene, Sampler *sampler, const Ray3f &ray, const Intersection* _its) const {
         if (m_tracerType == "explicit") {
-            return Li_explicit(scene, sampler, ray);
+            return Li_explicit(scene, sampler, ray, 0);
         }
         else { //if (m_tracerType == "implicit") {
             return Li_implicit(scene, sampler, ray);
         }
     }
 
-    Color3f Li_explicit(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
+    Color3f Li_explicit(const Scene *scene, Sampler *sampler, const Ray3f &ray, int bounds) const {
+        if (m_termination == "russian-roulette") {
+            if (sampler->next1D() <= m_terminationProb || (bounds >= m_terminationBounds)) return Color3f(0.0f);
+        }
+        else if(m_termination == "path-depth") {
+            if (bounds >= m_terminationBounds) return Color3f(0.0f);
+        }
+
         //float maxt = scene->getBoundingBox().getExtents().norm();
         float maxt = 100.0f;
         
@@ -141,11 +148,28 @@ public:
         // calc Li w NEE
         Color3f Li = Tr(xt, xe) * Le_;
 
-        // calc Ls
+        // calc Ldir
         float fp = 1.0f / (4.0f * M_PI);
-        Color3f Ls = fp * Li;
+        Color3f Ldir = fp * Li;
+
+        // calc Lind
+        // sample fp
+        Vector3f wo_ = Warp::squareToUniformSphere(sampler->next2D());
+        float pdfW = Warp::squareToUniformSpherePdf(wo_);
+        //wo_ = Frame().toWorld(wo_);
+        //wo_.normalize();
+        Ray3f traceRay(xt, wo_, Epsilon, maxt);
+
+        Color3f Lind = fp * Li_explicit(scene, sampler, traceRay, ++bounds) / pdfW;
+
+        Color3f Ls = Ldir + Lind;
 
         Color3f Lr = Tr(x, xt) * m_sigmaS * Ls / pdfT;
+
+        if (m_termination == "russian-roulette") {
+            Lr /= (1 - m_terminationProb);
+        }
+
         return Lr;
     }
 

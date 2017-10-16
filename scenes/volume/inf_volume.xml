@@ -8,14 +8,10 @@
         <string name="distanceSampling" value="transmittance"/>
         <float name="sigmaA" value="0.0"/>
         <float name="sigmaS" value="0.8"/>
-        <!--
         <string name="termination" value="path-depth"/>
-        <integer name="terminationBounds" value="1"/>
-        -->
-        <!--
-        <string name="termination" value="russian-roulette"/>
+        <integer name="terminationBounds" value="2"/>
         <float name="terminationProb" value="0.3"/>
-        -->
+    
     </integrator>
 
     <shape type="sphere">
