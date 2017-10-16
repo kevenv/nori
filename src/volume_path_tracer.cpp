@@ -134,6 +134,7 @@ public:
         Intersection itsLight;
         bool intersects = scene->rayIntersect(lightRay, itsLight);
         if (intersects && (itsLight.shape->isEmitter())) {
+            xe = itsLight.p;
             Le_ = itsLight.shape->getEmitter()->eval(itsLight, wo) / pWi;
         }
 
