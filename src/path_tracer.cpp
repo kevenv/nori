@@ -30,6 +30,9 @@ public:
         else if (m_tracerType == "explicit-iter") {
             return Li_explicit_iter(scene, sampler, ray);
         }
+        else if (m_tracerType == "explicit-mis") {
+            return Li_explicit_mis(scene, sampler, ray);
+        }
         else if (m_tracerType == "implicit") {
             return Li_implicit(scene, sampler, ray, 0);
         }
@@ -171,6 +174,121 @@ public:
         }
 
         return Lr;
+    }
+
+    Color3f Li_explicit_mis(const Scene *scene, Sampler *sampler, const Ray3f &ray) const {
+        Color3f T(1.0f); // throughput
+        Color3f Lr(0.0f);
+        Ray3f wi(ray);
+
+        Intersection its;
+        if(!scene->rayIntersect(wi, its)) return 0.0f;
+
+        // explicit emission
+        if(its.shape->isEmitter()) {
+            return its.shape->getEmitter()->eval(its, -wi.d);
+        }
+
+        // bounce 0 (emission)
+        if(m_terminationBounds == 0) return 0.0f;
+
+        float maxt = scene->getBoundingBox().getExtents().norm();
+
+        int bounds = 0;
+        while(bounds < m_terminationBounds || m_termination == "russian-roulette") {
+            // direct illumination
+            // Ldir : MIS(light,brdf)
+            Color3f Ldir(0.0f);
+            for (const Emitter* emitter : scene->getEmitters()) {
+                const Shape* lightShape = emitter->getShape();
+                if (lightShape) { // is area light?
+                    Normal3f yN;
+                    Point3f x = its.p;
+                    Point3f y = emitter->sample(sampler, yN);
+                    Vector3f wo = (y - x).normalized();
+
+                    Ray3f lightRay(x, wo, Epsilon, maxt);
+                    Intersection itsLight;
+                    bool intersects = scene->rayIntersect(lightRay, itsLight);
+                    if (intersects && (itsLight.shape->isEmitter() && itsLight.shape == lightShape)) {
+                        float cosThetaY = std::max(0.0f, (-wo).dot(yN));
+                        if(cosThetaY > 0.0f) { // check for division by zero
+                            float pA = 1.0f / lightShape->getArea();
+                            float d2 = (y - x).squaredNorm();
+                            float pdf = d2 / cosThetaY * pA;
+
+                            //wi,wo
+                            nori::BSDFQueryRecord bRec(its.toLocal(-wi.d), its.toLocal(wo), nori::ESolidAngle);
+                            nori::Color3f brdfValue = its.shape->getBSDF()->eval(bRec); // BRDF * cosTheta
+
+                            Color3f Le = emitter->eval(itsLight, wo);
+
+                            float pdfBrdf = its.shape->getBSDF()->pdf(bRec);
+                            float weight = balanceHeuristic(1, pdf, 1, pdfBrdf);
+
+                            Ldir += brdfValue * Le * weight / pdf;
+                        }
+                    }
+                }
+            }
+
+            Lr += Ldir * T;
+
+            // cast a random ray
+            nori::BSDFQueryRecord bRec(its.toLocal(-wi.d), Vector3f(0.0f), nori::ESolidAngle);
+            nori::Color3f fr = its.shape->getBSDF()->sample(bRec, sampler->next2D()); // BRDF / pdf * cosTheta
+            float pdf = its.shape->getBSDF()->pdf(bRec);
+            Vector3f woDir = its.toWorld(bRec.wo); // transform to world space so it aligns with the its
+            woDir.normalize();
+            Ray3f wo(its.p, woDir, Epsilon, maxt);
+
+            Point3f x = its.p;
+
+            if(!scene->rayIntersect(wo,its)) {
+                return Lr;
+            }
+
+            // indirect illumination
+            // Lind : BRDF IS
+            T *= fr;
+
+            if(its.shape->isEmitter()) {
+                // avoid double counting
+                // Ldir : MIS(light,brdf)
+                const Emitter* emitter = its.shape->getEmitter();
+                Color3f Le = emitter->eval(its, wo.d);
+
+                Point3f y = its.p; // its pt on emitter
+                Normal3f yN = its.shFrame.n;
+                float cosThetaY = std::max(0.0f, (-wo.d).dot(yN));
+                if(cosThetaY > 0.0f) { // check for division by zero
+                    float pA = 1.0f / emitter->getShape()->getArea();
+                    float d2 = (y - x).squaredNorm();
+                    float pdfEmitter = d2 / cosThetaY * pA;
+                    float weight = balanceHeuristic(1, pdf, 1, pdfEmitter);
+
+                    Lr += Le * weight * T;
+                }
+                return Lr;
+            }
+
+            wi = wo;
+
+            // RR
+            if (m_termination == "russian-roulette") {
+                T /= (1 - m_terminationProb); // do it on the last bounce, not the full path
+
+                if (sampler->next1D() <= m_terminationProb) return Lr;
+            }
+
+            bounds++;
+        }
+
+        return Lr;
+    }
+
+    float balanceHeuristic(int n1, float pdf1, int n2, float pdf2) const {
+        return (n1 * pdf1) / (n1 * pdf1 + n2 * pdf2);
     }
 
     Color3f Li_implicit(const Scene *scene, Sampler *sampler, const Ray3f &ray, int bounds) const {
