@@ -111,38 +111,56 @@ public:
 
         // sample light
         Emitter* em = scene->getEmitters()[0];
+        Point3f xe(0.0f);
         Color3f Le_(0.0f);
-        /*
-        // - area
-        Normal3f yN;
-        Point3f xe = em->sample(sampler, yN);
-        Vector3f wo = (xe - xt).normalized();
 
-        Ray3f lightRay(xt, wo, Epsilon, maxt);
-        Intersection itsLight;
-        bool intersects = scene->rayIntersect(lightRay, itsLight);
-        if (intersects && (itsLight.shape->isEmitter())) {
-            float cosThetaY = std::max(0.0f, (-wo).dot(yN));
-            if (cosThetaY > 0.0f) { // check for division by zero
-                float pA = 1.0f / em->getShape()->getArea();
+        if(!em->isDeltaLight()) {
+            // - area
+            /*
+            Normal3f yN;
+            xe = em->sample(sampler, yN);
+            Vector3f wo = (xe - xt).normalized();
+
+            Ray3f lightRay(xt, wo, Epsilon, maxt);
+            Intersection itsLight;
+            bool intersects = scene->rayIntersect(lightRay, itsLight);
+            if (intersects && (itsLight.shape->isEmitter())) {
+                float cosThetaY = std::max(0.0f, (-wo).dot(yN));
+                if (cosThetaY > 0.0f) { // check for division by zero
+                float pA = 1.0f / itsLight.shape->getArea();
                 float d2 = (xe - xt).squaredNorm();
                 float pdf = d2 / cosThetaY * pA;
 
-                Le_ = em->eval(itsLight, wo) / pdf;
+                Le_ = itsLight.shape->getEmitter()->eval(itsLight, wo) / pdf;
+                }
+                xe = itsLight.p;
+            }
+            */
+
+            // - solidangle
+            Point3f xe; Normal3f yN; float pWi;
+            Vector3f wo = em->sampleSolidAngle(sampler, xt, yN, pWi, xe);
+
+            Ray3f lightRay(xt, wo, Epsilon, maxt);
+            Intersection itsLight;
+            bool intersects = scene->rayIntersect(lightRay, itsLight);
+            if (intersects && (itsLight.shape->isEmitter())) {
+                xe = itsLight.p;
+                Le_ = itsLight.shape->getEmitter()->eval(itsLight, wo) / pWi;
             }
         }
-        */
+        else {
+            // - point light
+            Normal3f yN;
+            xe = em->sample(sampler, yN); // position
 
-        // - solidangle
-        Point3f xe; Normal3f yN; float pWi;
-        Vector3f wo = em->sampleSolidAngle(sampler, xt, yN, pWi, xe);
-
-        Ray3f lightRay(xt, wo, Epsilon, maxt);
-        Intersection itsLight;
-        bool intersects = scene->rayIntersect(lightRay, itsLight);
-        if (intersects && (itsLight.shape->isEmitter())) {
-            xe = itsLight.p;
-            Le_ = itsLight.shape->getEmitter()->eval(itsLight, wo) / pWi;
+            Vector3f wo = (xt - xe).normalized();
+            Ray3f lightRay(xt, wo, Epsilon, maxt);
+            Intersection itsLight;
+            bool intersects = scene->rayIntersect(lightRay, itsLight);
+            if (!intersects) {
+                Le_ = em->eval(itsLight, wo) / (xt - xe).squaredNorm();
+            }
         }
 
         // calc Li w NEE

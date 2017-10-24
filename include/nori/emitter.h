@@ -39,6 +39,8 @@ public:
     const Shape* getShape() const { return m_shape; }
     void setShape(Shape* shape) { m_shape = shape; }
 
+    bool isDeltaLight() const { return m_deltaLight; }
+
     /**
      * \brief Return the type of object (i.e. Mesh/Emitter/etc.) 
      * provided by this instance
@@ -46,6 +48,7 @@ public:
     EClassType getClassType() const { return EEmitter; }
 
 protected:
+    bool m_deltaLight{ false };
     Shape* m_shape = nullptr;
 };
 
