@@ -9,6 +9,11 @@
 
 NORI_NAMESPACE_BEGIN
 
+struct DistSample {
+    float t;
+    float pdf;
+};
+
 class VolumePT : public Integrator {
 public:
     VolumePT(const PropertyList &props) :
@@ -28,22 +33,19 @@ public:
         return std::exp( -m_sigmaT * (x - y).norm() );
     }
 
-    float distSample(const std::string& method, float tmax, Sampler* sampler) const {
-        if (method == "uniform") {
-            return sampler->next1D() * tmax;
-        }
-        else { // method == "transmittance"
-            return -std::log(1 - sampler->next1D()) / m_sigmaT;
-        }
-    }
+    DistSample distSample(const std::string& method, float tmax, Sampler* sampler) const {
+        DistSample s;
 
-    float distPdf(float t, const std::string& method, float tmax) const {
         if (method == "uniform") {
-            return 1.0f / tmax;
+            s.t = sampler->next1D() * tmax;
+            s.pdf = 1.0f / tmax;
         }
         else { // method == "transmittance"
-            return m_sigmaT * std::exp(-m_sigmaT*t);
+            s.t = -std::log(1 - sampler->next1D()) / m_sigmaT;
+            s.pdf = m_sigmaT * std::exp(-m_sigmaT*s.t);
         }
+
+        return s;
     }
 
     float distPdf_failure(float s, const std::string& method, float tmax) const {
@@ -92,8 +94,9 @@ public:
         Vector3f wi = ray.d;
 
         // sample distance (t)
-        float t = distSample(m_distanceSampling, maxt, sampler);
-        float pdfT = distPdf(t, m_distanceSampling, maxt);
+        DistSample dSample = distSample(m_distanceSampling, maxt, sampler);
+        float t = dSample.t;
+        float pdfT = dSample.pdf;
 
         // Emission - direct light hit (explicit)
         Intersection its;
@@ -199,8 +202,9 @@ public:
         Vector3f wi = ray.d;
 
         // sample distance (t)
-        float t = distSample(m_distanceSampling, maxt, sampler);
-        float pdfT = distPdf(t, m_distanceSampling, maxt);
+        DistSample dSample = distSample(m_distanceSampling, maxt, sampler);
+        float t = dSample.t;
+        float pdfT = dSample.pdf;
 
         // Emission - direct light hit (explicit)
         Intersection its;
