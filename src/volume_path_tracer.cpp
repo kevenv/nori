@@ -33,16 +33,26 @@ public:
         return std::exp( -m_sigmaT * (x - y).norm() );
     }
 
-    DistSample distSample(const std::string& method, float tmax, Sampler* sampler) const {
+    DistSample distSample(const std::string& method, float tmax, Sampler* sampler, const Ray3f& ray, const Point3f& xe) const {
         DistSample s;
 
         if (method == "uniform") {
             s.t = sampler->next1D() * tmax;
             s.pdf = 1.0f / tmax;
         }
-        else { // method == "transmittance"
+        else if(method == "transmittance") {
             s.t = -std::log(1 - sampler->next1D()) / m_sigmaT;
             s.pdf = m_sigmaT * std::exp(-m_sigmaT*s.t);
+        }
+        else { //if(method == "equi-angular")
+            float delta = (xe - ray.o).dot(ray.d);
+            float D = (xe - (ray.o + delta*ray.d)).norm();
+            float thetaA = std::atan((0.0 - delta)/D);
+            float thetaB = std::atan((tmax - delta)/D);
+            float ei = sampler->next1D();
+            s.t = D * std::tan((1-ei)*thetaA + ei*thetaB);
+            s.pdf = D / ((thetaB - thetaA)*(D*D+s.t*s.t));
+            s.t += delta;
         }
 
         return s;
@@ -93,8 +103,17 @@ public:
         Point3f x = ray.o;
         Vector3f wi = ray.d;
 
+        // get light position (xe)
+        Emitter* em = scene->getEmitters()[0];
+        Point3f xe(0.0f);
+
+        if(em->isDeltaLight()) {
+            Normal3f yN;
+            xe = em->sample(sampler, yN); // position
+        }
+
         // sample distance (t)
-        DistSample dSample = distSample(m_distanceSampling, maxt, sampler);
+        DistSample dSample = distSample(m_distanceSampling, maxt, sampler, ray, xe);
         float t = dSample.t;
         float pdfT = dSample.pdf;
 
@@ -113,8 +132,6 @@ public:
         Point3f xt = x + t*wi;
 
         // sample light
-        Emitter* em = scene->getEmitters()[0];
-        Point3f xe(0.0f);
         Color3f Le_(0.0f);
 
         if(!em->isDeltaLight()) {
@@ -201,8 +218,17 @@ public:
         Point3f x = ray.o;
         Vector3f wi = ray.d;
 
+        // get light position (xe)
+        Emitter* em = scene->getEmitters()[0];
+        Point3f xe(0.0f);
+
+        if(em->isDeltaLight()) {
+            Normal3f yN;
+            xe = em->sample(sampler, yN); // position
+        }
+
         // sample distance (t)
-        DistSample dSample = distSample(m_distanceSampling, maxt, sampler);
+        DistSample dSample = distSample(m_distanceSampling, maxt, sampler, ray, xe);
         float t = dSample.t;
         float pdfT = dSample.pdf;
 

@@ -1,0 +1,31 @@
+<scene>
+    <sampler type="independent">
+        <integer name="sampleCount" value="16"/>
+    </sampler>
+
+    <integrator type="volumePT">
+        <string name="tracerType" value="explicit"/>
+        <string name="distanceSampling" value="equi-angular"/>
+        <float name="sigmaA" value="0.0"/>
+        <float name="sigmaS" value="0.3"/>
+        <string name="termination" value="path-depth"/>
+        <integer name="terminationBounds" value="1"/>
+        <float name="terminationProb" value="0.3"/>
+    </integrator>
+
+    <emitter type="point">
+        <point name="position" value="0,0,0"/>
+        <color name="intensity" value="12,12,12"/>
+    </emitter>
+
+    <camera type="perspective">
+        <transform name="toWorld">
+            <lookat target="0,0,0" origin="0,-4,0" up="0,0,1"/>
+        </transform>
+
+        <float name="fov" value="37"/>
+
+        <integer name="width" value="300"/>
+        <integer name="height" value="300"/>
+    </camera>
+</scene>
