@@ -111,6 +111,9 @@ public:
             Normal3f yN;
             xe = em->sample(sampler, yN); // position
         }
+        else if(em->getShape()) {
+            xe = em->getShape()->getCentroid(0); // center if sphere light
+        }
 
         // sample distance (t)
         DistSample dSample = distSample(m_distanceSampling, maxt, sampler, ray, xe);
