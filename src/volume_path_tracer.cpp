@@ -214,11 +214,6 @@ public:
         Emitter* em = scene->getEmitters()[0];
         Point3f xe(0.0f);
 
-        if(em->isDeltaLight()) {
-            Normal3f yN;
-            xe = em->sample(sampler, yN); // position
-        }
-
         // sample distance (t)
         DistSample dSample = distSample(m_distanceSampling, maxt, sampler, ray, xe);
         float t = dSample.t;
