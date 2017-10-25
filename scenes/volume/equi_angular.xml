@@ -16,7 +16,7 @@
 <!--
     <emitter type="point">
         <point name="position" value="0,0,0"/>
-        <color name="intensity" value="12,12,12"/>
+        <color name="intensity" value="20,20,20"/>
     </emitter>
 -->
 
@@ -24,10 +24,10 @@
         <point name="center" value="0,0,0"/>
         <float name="radius" value="0.5"/>
         <emitter type="area">
-            <color name="radiance" value="30,30,30"/>
+            <color name="radiance" value="20,20,20"/>
         </emitter>
     </shape>
-    
+
     <camera type="perspective">
         <transform name="toWorld">
             <lookat target="0,0,0" origin="0,-4,0" up="0,0,1"/>
