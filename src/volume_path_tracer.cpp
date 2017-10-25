@@ -152,7 +152,7 @@ public:
 
             // - solidangle
             /*
-            Point3f xe; Normal3f yN; float pWi;
+            float pWi;
             Vector3f wo = em->sampleSolidAngle(sampler, xt, yN, pWi, xe);
 
             Ray3f lightRay(xt, wo, Epsilon, maxt);
