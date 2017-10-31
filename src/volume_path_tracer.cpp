@@ -22,6 +22,7 @@ public:
         m_terminationProb(props.getFloat("terminationProb", 0.2f)),
         m_terminationBounds(props.getInteger("terminationBounds", 15)),
         m_distanceSampling(props.getString("distanceSampling", "transmittance")),
+        m_emitterSampling(props.getString("emitterSampling", "solidangle")),
         m_sigmaA(props.getFloat("sigmaA", 0.1f)),
         m_sigmaS(props.getFloat("sigmaS", 0.5f)),
         m_sigmaT(m_sigmaA + m_sigmaS)
@@ -133,36 +134,36 @@ public:
         Color3f Le_(0.0f);
 
         if(!em->isDeltaLight()) {
-            // - area
-            Vector3f wo = (xe - xt).normalized();
-            Ray3f lightRay(xt, wo, Epsilon, maxt);
-            Intersection itsLight;
-            bool intersects = scene->rayIntersect(lightRay, itsLight);
-            if (intersects && (itsLight.shape->isEmitter())) {
-                float cosThetaY = std::max(0.0f, (-wo).dot(yN));
-                if (cosThetaY > 0.0f) { // check for division by zero
-                    float pA = 1.0f / itsLight.shape->getArea();
-                    float d2 = (xe - xt).squaredNorm();
-                    float pdf = d2 / cosThetaY * pA;
+            if(m_emitterSampling == "area") {
+                Vector3f wo = (xe - xt).normalized();
 
-                    Le_ = itsLight.shape->getEmitter()->eval(itsLight, wo) / pdf;
+                Ray3f lightRay(xt, wo, Epsilon, maxt);
+                Intersection itsLight;
+                bool intersects = scene->rayIntersect(lightRay, itsLight);
+                if (intersects && (itsLight.shape->isEmitter())) {
+                    float cosThetaY = std::max(0.0f, (-wo).dot(yN));
+                    if (cosThetaY > 0.0f) { // check for division by zero
+                        float pA = 1.0f / itsLight.shape->getArea();
+                        float d2 = (xe - xt).squaredNorm();
+                        float pdf = d2 / cosThetaY * pA;
+
+                        Le_ = itsLight.shape->getEmitter()->eval(itsLight, wo) / pdf;
+                    }
+                    //xe = itsLight.p;
                 }
-                //xe = itsLight.p;
             }
+            else { //if(m_emitterSampling == "solidangle")
+                float pWi;
+                Vector3f wo = em->sampleSolidAngle(sampler, xt, yN, pWi, xe);
 
-            // - solidangle
-            /*
-            float pWi;
-            Vector3f wo = em->sampleSolidAngle(sampler, xt, yN, pWi, xe);
-
-            Ray3f lightRay(xt, wo, Epsilon, maxt);
-            Intersection itsLight;
-            bool intersects = scene->rayIntersect(lightRay, itsLight);
-            if (intersects && (itsLight.shape->isEmitter())) {
-                xe = itsLight.p;
-                Le_ = itsLight.shape->getEmitter()->eval(itsLight, wo) / pWi;
+                Ray3f lightRay(xt, wo, Epsilon, maxt);
+                Intersection itsLight;
+                bool intersects = scene->rayIntersect(lightRay, itsLight);
+                if (intersects && (itsLight.shape->isEmitter())) {
+                    xe = itsLight.p;
+                    Le_ = itsLight.shape->getEmitter()->eval(itsLight, wo) / pWi;
+                }
             }
-            */
         }
         else {
             // - point light
@@ -267,6 +268,7 @@ public:
             " terminationProb = %d\n"
             " terminationBounds = %d\n"
             " distanceSampling = %s\n"
+            " emitterSampling = %s\n"
             " sigmaA = %d\n"
             " sigmaS = %d\n"
             " sigmaT = %d\n"
@@ -288,6 +290,7 @@ private:
     const float m_terminationProb;
     const int m_terminationBounds;
     const std::string m_distanceSampling;
+    const std::string m_emitterSampling;
     const float m_sigmaA;
     const float m_sigmaS;
     const float m_sigmaT;
