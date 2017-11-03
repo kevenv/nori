@@ -41,7 +41,7 @@
         <point name="center" value="0,0,1.985"/>
         <float name="width" value="1"/>
         <float name="height" value="1"/>
-        <float name="normalZ" value="-1"/>
+        <vector name="normalRotation" value="180,0,0"/>
         <emitter type="area">
             <color name="radiance" value="20,20,20"/>
         </emitter>
