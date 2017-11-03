@@ -26,11 +26,11 @@
 <!--
     <shape type="plane">
         <point name="center" value="0,0,0"/>
-        <float name="width" value="1"/>
-        <float name="height" value="1"/>
-        <float name="normalZ" value="-1"/>
+        <float name="width" value="0.5"/>
+        <float name="height" value="0.5"/>
+        <vector name="normalRotation" value="90,0,0"/>
         <emitter type="area">
-            <color name="radiance" value="80,80,80"/>
+            <color name="radiance" value="30,30,30"/>
         </emitter>
     </shape>
 -->
