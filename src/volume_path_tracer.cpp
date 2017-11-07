@@ -23,6 +23,7 @@ public:
         m_terminationBounds(props.getInteger("terminationBounds", 15)),
         m_distanceSampling(props.getString("distanceSampling", "transmittance")),
         m_emitterSampling(props.getString("emitterSampling", "solidangle")),
+        m_equiAngularPoint(props.getString("equiAngularPoint", "sample")),
         m_sigmaA(props.getFloat("sigmaA", 0.1f)),
         m_sigmaS(props.getFloat("sigmaS", 0.5f)),
         m_sigmaT(m_sigmaA + m_sigmaS)
@@ -107,9 +108,17 @@ public:
         // sample light position (xe)
         Emitter* em = scene->getEmitters()[0];
         Normal3f yN;
-        // point light = position
-        // sphere light = point on surface
-        Point3f xe = em->sample(sampler, yN);
+        Point3f xe;
+        if(m_distanceSampling == "equi-angular") {
+            // point light = position
+            // sphere light = point on surface
+            if(m_equiAngularPoint == "sample" || em->isDeltaLight()) {
+                xe = em->sample(sampler, yN);
+            }
+            else { // if(m_equiAngularPoint == "center") {
+                xe = em->getShape()->getCentroid(0);
+            }
+        }
 
         // sample distance (t)
         DistSample dSample = distSample(m_distanceSampling, maxt, sampler, ray, xe);
@@ -135,6 +144,9 @@ public:
 
         if(!em->isDeltaLight()) {
             if(m_emitterSampling == "area") {
+                if(m_distanceSampling != "equi-angular" || m_equiAngularPoint == "center") {
+                    xe = em->sample(sampler, yN);
+                }
                 Vector3f wo = (xe - xt).normalized();
 
                 Ray3f lightRay(xt, wo, Epsilon, maxt);
@@ -149,7 +161,6 @@ public:
 
                         Le_ = itsLight.shape->getEmitter()->eval(itsLight, wo) / pdf;
                     }
-                    //xe = itsLight.p;
                 }
             }
             else { //if(m_emitterSampling == "solidangle")
@@ -167,6 +178,7 @@ public:
         }
         else {
             // - point light
+            xe = em->sample(sampler, yN); // position
             Vector3f wo = (xt - xe).normalized();
             Ray3f lightRay(xt, wo, Epsilon, maxt);
             Intersection itsLight;
@@ -269,6 +281,7 @@ public:
             " terminationBounds = %d\n"
             " distanceSampling = %s\n"
             " emitterSampling = %s\n"
+            " equiAngularPoint = %s\n"
             " sigmaA = %d\n"
             " sigmaS = %d\n"
             " sigmaT = %d\n"
@@ -278,6 +291,8 @@ public:
             m_terminationProb,
             m_terminationBounds,
             m_distanceSampling,
+            m_emitterSampling,
+            m_equiAngularPoint,
             m_sigmaA,
             m_sigmaS,
             m_sigmaT
@@ -291,6 +306,7 @@ private:
     const int m_terminationBounds;
     const std::string m_distanceSampling;
     const std::string m_emitterSampling;
+    const std::string m_equiAngularPoint;
     const float m_sigmaA;
     const float m_sigmaS;
     const float m_sigmaT;
