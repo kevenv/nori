@@ -9,7 +9,7 @@
         <string name="emitterSampling" value="solidangle"/>
         <string name="equiAngularPoint" value="sample"/>
         <float name="sigmaA" value="0.0"/>
-        <float name="sigmaS" value="0.8"/>
+        <float name="sigmaS" value="0.3"/>
         <string name="termination" value="path-depth"/>
         <integer name="terminationBounds" value="1"/>
         <float name="terminationProb" value="0.3"/>
@@ -19,14 +19,14 @@
         <point name="center" value="0,0,0"/>
         <float name="radius" value="0.5"/>
         <emitter type="area">
-            <color name="radiance" value="30,30,30"/>
+            <color name="radiance" value="20,20,20"/>
         </emitter>
     </shape>
 
 <!--
     <emitter type="point">
         <point name="position" value="0,0,0"/>
-        <color name="intensity" value="30,30,30"/>
+        <color name="intensity" value="20,20,20"/>
     </emitter>
 -->
 
@@ -37,7 +37,7 @@
         <float name="height" value="0.5"/>
         <vector name="normalRotation" value="45,0,0"/>
         <emitter type="area">
-            <color name="radiance" value="30,30,30"/>
+            <color name="radiance" value="20,20,20"/>
         </emitter>
     </shape>
 -->
