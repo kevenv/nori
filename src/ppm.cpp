@@ -13,6 +13,7 @@ struct Photon {
     Point3f x;
     Vector3f w;
     Color3f phi;
+    Normal3f n;
 };
 
 class PPM : public Integrator {
@@ -98,8 +99,7 @@ public:
         Photon p; // don't store 'starting' photons directly on the emitter
 
         // sample position
-        Normal3f n;
-        p.x = em.sample(sampler, n);
+        p.x = em.sample(sampler, p.n);
         float pdfX = 1.0f / em.getShape()->getArea();
 
         // sample direction
@@ -115,7 +115,7 @@ public:
             pdfW = Warp::squareToUniformHemispherePdf(wLoc);
         }
 
-        Frame N(n);
+        Frame N(p.n);
         p.w = N.toWorld(wLoc);
         p.w.normalize();
 
@@ -164,6 +164,7 @@ public:
         p_.x = its.p;
         p_.w = its.toWorld(bRec.wo);
         p_.phi = p.phi * brdfValue;
+        p_.n = its.shFrame.n;
 
         // scatter photon
         if(survivedRR(p, p_, sampler->next1D())) {
@@ -274,10 +275,17 @@ public:
         // compute radiance estimate from k nearest photons
         Color3f Lr(0.0f);
         for(int i = 0; i < k; ++i) {
+            Vector3f wi = -m_photonMap[i].w;
+
             //wi,wo
-            BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(-m_photonMap[i].w), ESolidAngle);
+            BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wi), ESolidAngle);
             Color3f brdfValue = its.shape->getBSDF()->eval(bRec) /* BRDF * cosTheta */ / Frame::cosTheta(bRec.wo);
-            Lr += brdfValue * nearestPhotons[i].phi / (M_PI*radius2);
+
+            Normal3f nX = its.shFrame.n;
+            Normal3f nY = nearestPhotons[i].n;
+            if(nX.dot(wi) > 0 && nX.dot(nY) > 0.01 && nY.dot(wi) > 0.001) {
+                Lr += brdfValue * nearestPhotons[i].phi / (M_PI*radius2);
+            }
         }
         return Lr;
     }
