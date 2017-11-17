@@ -111,8 +111,8 @@ public:
             pdfW = Warp::squareToCosineHemispherePdf(wLoc);
         }
         else { //if(emitterType == "sphere") {
-            wLoc = Warp::squareToUniformHemisphere(sampler->next2D());
-            pdfW = Warp::squareToUniformHemispherePdf(wLoc);
+            wLoc = Warp::squareToCosineHemisphere(sampler->next2D());
+            pdfW = Warp::squareToCosineHemispherePdf(wLoc);
         }
 
         Frame N(p.n);
