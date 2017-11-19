@@ -103,17 +103,8 @@ public:
         float pdfX = 1.0f / em.getShape()->getArea();
 
         // sample direction
-        Vector3f wLoc;
-        float pdfW;
-        std::string emitterType = em.getShape()->getType();
-        if (emitterType == "plane") { //todo: hack
-            wLoc = Warp::squareToCosineHemisphere(sampler->next2D());
-            pdfW = Warp::squareToCosineHemispherePdf(wLoc);
-        }
-        else { //if(emitterType == "sphere") {
-            wLoc = Warp::squareToCosineHemisphere(sampler->next2D());
-            pdfW = Warp::squareToCosineHemispherePdf(wLoc);
-        }
+        Vector3f wLoc = Warp::squareToCosineHemisphere(sampler->next2D());
+        float pdfW = Warp::squareToCosineHemispherePdf(wLoc);
 
         Frame N(p.n);
         p.w = N.toWorld(wLoc);
@@ -121,7 +112,7 @@ public:
 
         // compute power
         Color3f Le = em.evalPosition();
-        float cosTheta = std::max(0.0f,p.w.dot(n));
+        float cosTheta = std::max(0.0f,p.w.dot(p.n));
         p.phi = Le * cosTheta / (pdfX*pdfW);
 
         m_emittedPhotonCount++;

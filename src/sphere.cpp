@@ -158,8 +158,6 @@ public:
         );
     }
 
-    virtual std::string getType() const override { return "sphere"; }
-
 protected:
     Point3f m_center;
     float m_radius;
