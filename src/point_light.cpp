@@ -16,10 +16,6 @@ public:
         return m_intensity;
     }
 
-    virtual Color3f evalPosition() const override {
-        throw NoriException("Unimplemented PointLight::evalPosition() !!!");
-    }
-
     virtual Point3f sample(Sampler* sampler, Normal3f& normal) const override {
         return m_position;
     }

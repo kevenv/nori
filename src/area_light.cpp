@@ -13,11 +13,8 @@ public:
     }
 
     virtual Color3f eval(const Intersection& its, const Vector3f& d) const override {
+        // careful when modifying this, the its in PPM is fake!
         return m_radiance;
-    }
-
-    virtual Color3f evalPosition() const override {
-        return m_radiance * M_PI;
     }
 
     virtual Point3f sample(Sampler* sampler, Normal3f& normal) const override {

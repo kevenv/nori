@@ -111,7 +111,7 @@ public:
         p.w.normalize();
 
         // compute power
-        Color3f Le = em.evalPosition();
+        Color3f Le = em.eval(Intersection(), -p.w);
         float cosTheta = std::max(0.0f,p.w.dot(p.n));
         p.phi = Le * cosTheta / (pdfX*pdfW);
 
@@ -143,6 +143,7 @@ public:
             m_photonMap[m_currentPhotonCount].x = its.p;
             m_photonMap[m_currentPhotonCount].w = p.w;
             m_photonMap[m_currentPhotonCount].phi = p.phi;
+            m_photonMap[m_currentPhotonCount].n = its.shFrame.n;
             m_currentPhotonCount++;
         }
 
