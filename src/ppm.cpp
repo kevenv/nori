@@ -28,7 +28,7 @@ public:
         m_knnMethod(KNN_METHOD_RADIUS),
         m_currentPhotonCount(0),
         m_emittedPhotonCount(0),
-        m_directIntegrator("area", m_samplesDI, 0)
+        m_directIntegrator("solidangle", m_samplesDI, 0)
     {
         m_progressive = static_cast<bool>(props.getInteger("progressive",1));
         m_iterations = props.getInteger("iterations", 1);
@@ -48,6 +48,9 @@ public:
     }
 
     void preprocess(const Scene *scene) override {
+        // make radius2 independent of scene size
+        m_radius2 *= scene->getBoundingBox().getExtents().norm();
+
         generatePhotonMap(scene);
     }
 
@@ -75,8 +78,10 @@ public:
             tracePhoton(p, scene, sampler, 0);
         }
 
-        for(int i = 0; i < m_photonCount; ++i) {
-            m_photonMap[i].phi /= m_emittedPhotonCount;
+        if(m_emittedPhotonCount > 0) {
+            for (int i = 0; i < m_photonCount; ++i) {
+                m_photonMap[i].phi /= m_emittedPhotonCount;
+            }
         }
 
         // build KD-Tree
@@ -112,8 +117,8 @@ public:
 
         // compute power
         Color3f Le = em.eval(Intersection(), -p.w);
-        float cosTheta = std::max(0.0f,p.w.dot(p.n));
-        p.phi = Le * cosTheta / (pdfX*pdfW);
+        float cosThetaP = std::max(0.0f,p.w.dot(p.n));
+        p.phi = (Le * cosThetaP) / (pdfX*pdfW);
 
         m_emittedPhotonCount++;
 
@@ -139,7 +144,7 @@ public:
         }
 
         // don't estimate DI with PM
-        if (bounds > 0) {
+        if (enabledFG() || !enabledDI() || bounds > 0) {
             m_photonMap[m_currentPhotonCount].x = its.p;
             m_photonMap[m_currentPhotonCount].w = p.w;
             m_photonMap[m_currentPhotonCount].phi = p.phi;
@@ -200,11 +205,14 @@ public:
         float maxt = scene->getBoundingBox().getExtents().norm();
 
         // DI
-        Color3f Ld = m_directIntegrator.Li(scene, sampler, ray, &its);
+        Color3f Ld(0.0f);
+        if(enabledDI() || enabledFG()) {
+            Ld = m_directIntegrator.Li(scene, sampler, ray, &its);
+        }
 
         // GI using PM w final gathering (FG)
         Color3f Li(0.0f);
-        if(m_samplesFG > 0) {
+        if(enabledFG()) {
             for (int i = 0; i < m_samplesFG; ++i) {
                 Vector3f wo = Warp::squareToCosineHemisphere(sampler->next2D());
                 float pdf = Warp::squareToCosineHemispherePdf(wo);
@@ -267,16 +275,17 @@ public:
         // compute radiance estimate from k nearest photons
         Color3f Lr(0.0f);
         for(int i = 0; i < k; ++i) {
-            Vector3f wi = -m_photonMap[i].w;
+            const Photon& photon = nearestPhotons[i];
+            Vector3f wi = -photon.w;
 
             //wi,wo
             BSDFQueryRecord bRec(its.toLocal(-ray.d), its.toLocal(wi), ESolidAngle);
             Color3f brdfValue = its.shape->getBSDF()->eval(bRec) /* BRDF * cosTheta */ / Frame::cosTheta(bRec.wo);
 
             Normal3f nX = its.shFrame.n;
-            Normal3f nY = nearestPhotons[i].n;
+            Normal3f nY = photon.n;
             if(nX.dot(wi) > 0 && nX.dot(nY) > 0.01 && nY.dot(wi) > 0.001) {
-                Lr += brdfValue * nearestPhotons[i].phi / (M_PI*radius2);
+                Lr += brdfValue * photon.phi / (M_PI*radius2);
             }
         }
         return Lr;
@@ -320,6 +329,9 @@ public:
             m_knnMethodStr
         );
     }
+
+    bool enabledFG() const { return m_samplesFG > 0; }
+    bool enabledDI() const { return m_samplesDI > 0; }
 
 private:
     enum KNN_METHOD {
